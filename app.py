@@ -1,11 +1,15 @@
 from flask import Flask
 
+from client import supabase
+
 app = Flask(__name__)
 
 
 @app.route("/")
 def home():
-    return "Hello, World!"
+    response = supabase.table("countries").select("*").execute()
+
+    return str(response)
 
 
 @app.route("/about")
