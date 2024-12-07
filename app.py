@@ -48,16 +48,12 @@ def save_user_data():
         )
 
         if response.data:  # Successful insertion
-            print("User data saved successfully (201)")
             return jsonify({"message": "User data saved successfully"}), 201
-        elif response.error:  # Error returned from Supabase
-            print(f"Failed to save data: {response.error}")
-            if "duplicate key value violates unique constraint" in str(response.error):
-                return jsonify({"error": "This email is already registered."}), 409
-            return jsonify({"error": str(response.error)}), 400
 
     except Exception as e:
         error_message = str(e)
+        if "duplicate key value violates unique constraint" in str(error_message):
+            return jsonify({"error": "This email is already registered."}), 409
         print(f"Unexpected error saving user data: {error_message}")
         return jsonify({"error": "An unexpected error occurred."}), 500
 
