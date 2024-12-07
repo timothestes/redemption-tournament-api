@@ -9,7 +9,8 @@ from client import supabase
 load_dotenv()
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": os.environ["ALLOWED_ORIGIN"]}})
+# CORS(app, resources={r"/*": {"origins": os.environ["ALLOWED_ORIGIN"]}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 @app.route("/")
@@ -59,4 +60,7 @@ def save_user_data():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
+
+# https://redemption-tournament-tracker.vercel.app
+# https://redemption-tournament-tracker.vercel.app
