@@ -10,7 +10,7 @@ def home():
 
 @app.route("/about")
 def about():
-    return "About"
+    return "About this"
 
 
 if __name__ == "__main__":
