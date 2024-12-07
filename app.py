@@ -1,15 +1,15 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from client import supabase
 
+load_dotenv()
 app = Flask(__name__)
 
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://redemption-tournament-tracker.vercel.app",
-]
-CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGINS}})
+CORS(app, resources={r"/*": {"origins": os.environ["ALLOWED_ORIGIN"]}})
 
 
 @app.route("/")
@@ -47,20 +47,18 @@ def save_user_data():
             .execute()
         )
 
-        if response.status_code == 201:
+        if response.data:  # Successful insertion
             print("User data saved successfully (201)")
             return jsonify({"message": "User data saved successfully"}), 201
-        else:
-            print("Failed to save data (status code not 201)")
-            return jsonify({"error": "Failed to save user data"}), 400
+        elif response.error:  # Error returned from Supabase
+            print(f"Failed to save data: {response.error}")
+            if "duplicate key value violates unique constraint" in str(response.error):
+                return jsonify({"error": "This email is already registered."}), 409
+            return jsonify({"error": str(response.error)}), 400
 
     except Exception as e:
         error_message = str(e)
-        print(f"Error saving user data: {error_message}")
-
-        if "duplicate key value violates unique constraint" in error_message:
-            return jsonify({"error": "This email is already registered."}), 409
-
+        print(f"Unexpected error saving user data: {error_message}")
         return jsonify({"error": "An unexpected error occurred."}), 500
 
 
