@@ -13,6 +13,11 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
+def str_to_bool(value):
+    """Convert a string to a boolean."""
+    return str(value).strip().lower() in {"true", "1", "t", "yes", "True"}
+
+
 @app.route("/")
 def home():
     return "home"
@@ -60,7 +65,7 @@ def save_user_data():
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
-
-# https://redemption-tournament-tracker.vercel.app
-# https://redemption-tournament-tracker.vercel.app
+    load_dotenv()
+    debug = str_to_bool(os.getenv("DEBUG", "False"))
+    print(f"debug mode: {debug}")
+    app.run(debug=debug)
