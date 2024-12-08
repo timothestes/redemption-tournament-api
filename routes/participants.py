@@ -45,6 +45,13 @@ def add_participant():
             .insert({"tournament_id": tournament_id, "user_id": user_id})
             .execute()
         )
+
+        # Increment the participant count using the RPC function
+        supabase.rpc(
+            "increment_participant_count",
+            {"tournament_id": tournament_id, "increment_by": 1},
+        ).execute()
+
         return jsonify(response.data[0]), 201
     except Exception as e:
         error_message = str(e).lower()
@@ -110,21 +117,6 @@ def list_participants():
         return jsonify({"error": str(e)}), 500
 
 
-@participants_bp.route("/participants/<participant_id>", methods=["DELETE"])
-def remove_participant(participant_id):
-    """Remove a participant from a tournament."""
-    try:
-        response = (
-            supabase.table("participants").delete().eq("id", participant_id).execute()
-        )
-        if response.data:
-            return jsonify({"message": "Participant removed."}), 200
-        return jsonify({"error": "Participant not found."}), 404
-    except Exception as e:
-        print(e)
-        return jsonify({"error": str(e)}), 500
-
-
 @participants_bp.route("/participants/<participant_id>", methods=["PUT"])
 def update_participant(participant_id):
     """Update participant information in a tournament."""
@@ -143,6 +135,37 @@ def update_participant(participant_id):
         if response.data:
             return jsonify(response.data[0]), 200
         return jsonify({"error": "Participant not found."}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+
+
+@participants_bp.route("/participants/<participant_id>", methods=["DELETE"])
+def remove_participant(participant_id):
+    """Remove a participant from a tournament."""
+    try:
+        # Fetch the tournament_id before deleting
+        participant_response = (
+            supabase.table("participants")
+            .select("tournament_id")
+            .eq("id", participant_id)
+            .execute()
+        )
+        if not participant_response.data:
+            return jsonify({"error": "Participant not found."}), 404
+
+        tournament_id = participant_response.data[0]["tournament_id"]
+
+        # Remove the participant
+        supabase.table("participants").delete().eq("id", participant_id).execute()
+
+        # Decrement the participant count using the RPC function
+        supabase.rpc(
+            "increment_participant_count",
+            {"tournament_id": tournament_id, "increment_by": -1},
+        ).execute()
+
+        return jsonify({"message": "Participant removed."}), 200
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500

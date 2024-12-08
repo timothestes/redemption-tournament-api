@@ -56,7 +56,7 @@ def create_tournament():
 
 @tournaments_bp.route("/tournaments", methods=["GET"])
 def list_tournaments():
-    """List tournaments with participant counts, optionally filtered by host_id."""
+    """List tournaments, optionally filtered by host_id."""
     host_id = request.args.get("host_id")
 
     # Base query to get tournaments
@@ -65,30 +65,9 @@ def list_tournaments():
         query = query.eq("host_id", host_id)
 
     try:
-        # Fetch tournaments
         tournaments_response = query.execute()
-        tournaments = tournaments_response.data
-
-        if not tournaments:
-            return jsonify([]), 200
-
-        # Fetch participant counts using the RPC function
-        participant_counts_response = supabase.rpc(
-            "get_tournament_participant_counts"
-        ).execute()
-        participant_counts = {
-            item["tournament_id"]: item["participant_count"]
-            for item in participant_counts_response.data
-        }
-
-        # Add participant counts to each tournament
-        for tournament in tournaments:
-            tournament["participant_count"] = participant_counts.get(
-                tournament["id"], 0
-            )
-
+        tournaments = tournaments_response.data or []
         return jsonify(tournaments), 200
-
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500
@@ -130,21 +109,6 @@ def list_user_tournaments():
         # Combine and deduplicate tournaments
         all_tournaments = {t["id"]: t for t in hosted_tournaments + joined_tournaments}
 
-        # Fetch participant counts using the RPC function
-        participant_counts_response = supabase.rpc(
-            "get_tournament_participant_counts"
-        ).execute()
-        participant_counts = {
-            item["tournament_id"]: item["participant_count"]
-            for item in participant_counts_response.data
-        }
-
-        # Add participant counts to each tournament
-        for tournament in all_tournaments.values():
-            tournament["participant_count"] = participant_counts.get(
-                tournament["id"], 0
-            )
-
         return jsonify(list(all_tournaments.values())), 200
     except Exception as e:
         print(e)
@@ -179,8 +143,26 @@ def update_tournament(tournament_id):
 
 @tournaments_bp.route("/tournaments/<tournament_id>", methods=["DELETE"])
 def delete_tournament(tournament_id):
-    """Delete a tournament."""
-    response = supabase.table("tournaments").delete().eq("id", tournament_id).execute()
-    if response.data:
-        return jsonify({"message": "Tournament deleted."}), 200
-    return jsonify({"error": "Tournament not found."}), 404
+    """Delete a tournament and its participants."""
+    try:
+        # Delete participants associated with the tournament
+
+        supabase.table("participants").delete().eq(
+            "tournament_id", tournament_id
+        ).execute()
+
+        # Delete the tournament itself
+        tournament_response = (
+            supabase.table("tournaments").delete().eq("id", tournament_id).execute()
+        )
+
+        if tournament_response.data:
+            return (
+                jsonify({"message": "Tournament and associated participants deleted."}),
+                200,
+            )
+
+        return jsonify({"error": "Tournament not found."}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500

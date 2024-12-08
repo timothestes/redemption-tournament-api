@@ -76,18 +76,14 @@ create table participants (
 
 
 ## SQL functions created:
-```sql
-CREATE OR REPLACE FUNCTION get_tournament_participant_counts()
-RETURNS TABLE(tournament_id uuid, participant_count bigint) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    participants.tournament_id,
-    COUNT(*) AS participant_count
-  FROM
-    participants
-  GROUP BY
-    participants.tournament_id;
-END;
-$$ LANGUAGE plpgsql;
+
+```
+create or replace function increment_participant_count(tournament_id uuid, increment_by int)
+returns void as $$
+begin
+  update tournaments
+  set participant_count = participant_count + increment_by
+  where id = tournament_id;
+end;
+$$ language plpgsql volatile;
 ```
