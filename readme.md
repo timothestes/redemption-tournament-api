@@ -74,3 +74,20 @@ create table participants (
 
 ---
 
+
+## SQL functions created:
+```sql
+CREATE OR REPLACE FUNCTION get_tournament_participant_counts()
+RETURNS TABLE(tournament_id uuid, participant_count bigint) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    participants.tournament_id,
+    COUNT(*) AS participant_count
+  FROM
+    participants
+  GROUP BY
+    participants.tournament_id;
+END;
+$$ LANGUAGE plpgsql;
+```
