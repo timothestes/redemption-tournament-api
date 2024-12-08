@@ -94,6 +94,63 @@ def list_tournaments():
         return jsonify({"error": str(e)}), 500
 
 
+@tournaments_bp.route("/user-tournaments", methods=["GET"])
+def list_user_tournaments():
+    """List tournaments the user is part of (hosted or joined)."""
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "user_id is required."}), 400
+
+    try:
+        # Fetch tournaments where the user is the host
+        hosted_response = (
+            supabase.table("tournaments").select("*").eq("host_id", user_id).execute()
+        )
+        hosted_tournaments = hosted_response.data or []
+
+        # Fetch tournaments where the user is a participant
+        participant_response = (
+            supabase.table("participants")
+            .select("tournament_id")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        participant_tournament_ids = [
+            p["tournament_id"] for p in participant_response.data
+        ]
+
+        joined_tournaments_response = (
+            supabase.table("tournaments")
+            .select("*")
+            .in_("id", participant_tournament_ids)
+            .execute()
+        )
+        joined_tournaments = joined_tournaments_response.data or []
+
+        # Combine and deduplicate tournaments
+        all_tournaments = {t["id"]: t for t in hosted_tournaments + joined_tournaments}
+
+        # Fetch participant counts using the RPC function
+        participant_counts_response = supabase.rpc(
+            "get_tournament_participant_counts"
+        ).execute()
+        participant_counts = {
+            item["tournament_id"]: item["participant_count"]
+            for item in participant_counts_response.data
+        }
+
+        # Add participant counts to each tournament
+        for tournament in all_tournaments.values():
+            tournament["participant_count"] = participant_counts.get(
+                tournament["id"], 0
+            )
+
+        return jsonify(list(all_tournaments.values())), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+
+
 @tournaments_bp.route("/tournaments/<tournament_id>", methods=["PUT"])
 def update_tournament(tournament_id):
     """Update a tournament."""
