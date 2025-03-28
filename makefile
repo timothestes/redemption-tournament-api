@@ -11,3 +11,9 @@ exit:
 # Command to install all dependencies from the Pipfile
 install:
 	pipenv install
+
+test:
+	pytest --maxfail=1 --disable-warnings -q
+
+run:
+	python3 -m app
