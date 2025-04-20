@@ -1,6 +1,8 @@
+import os
 import tempfile
 from uuid import uuid4
 
+from src.utilities.config import str_to_bool
 from src.utilities.decklist import Decklist
 from src.utilities.text_to_pdf import make_pdf
 
@@ -14,8 +16,12 @@ def generate_pdf(deck_data: str, deck_type: str, name: str, event: str):
         deck_data = Decklist(temp_file.name, deck_type=deck_type).to_json()
 
     make_pdf(deck_type, deck_data, filename=unique_filename, name=name, event=event)
+    if str_to_bool(os.getenv("DEBUG")):
+        output_dir = "tmp"
+    else:
+        output_dir = "/tmp"
 
     return (
         unique_filename,
-        f"/tmp/{unique_filename}.pdf",
+        f"{output_dir}/{unique_filename}.pdf",
     )

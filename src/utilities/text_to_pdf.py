@@ -458,7 +458,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
     box_height = 30
     right_margin = 290
     top_margin = 56
-    c.setFont("Helvetica", 24)
+    c.setFont("Helvetica", 20)
     c.drawString(
         width_points - right_margin - box_width + 5,
         height_points - top_margin - box_height + 10,
