@@ -126,11 +126,6 @@ def generate_decklist(deck_type: str, deck_data, filename: str):
     """
     Generate a deck check sheet overlay with card listings, section counts,
     and a total card count.
-
-    Args:
-        deck_type (str): The type of deck check sheet ('type_1' or 'type_2')
-        deck_data (dict): The deck data containing main_deck and reserve
-        filename (str): Name for the output file (without extension)
     """
     if deck_type == "type_1":
         template_path = "assets/pdfs/t1_deck_check.pdf"
@@ -140,9 +135,9 @@ def generate_decklist(deck_type: str, deck_data, filename: str):
     # Create output directory if it doesn't exist
     os.makedirs("/tmp", exist_ok=True)
 
-    # Use dynamic filename for output
-    output_path = f"tmp/{filename}.pdf"
-    temp_overlay = f"tmp/temp_{filename}.pdf"
+    # Use system temp directory for all temporary files
+    output_path = os.path.join("/tmp", f"{filename}.pdf")
+    temp_overlay = os.path.join("/tmp", f"temp_{filename}.pdf")
 
     reader = PdfReader(template_path)
     page = reader.pages[0]
