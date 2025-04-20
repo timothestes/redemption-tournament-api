@@ -163,5 +163,5 @@ cython_debug/
 .env
 .vscode
 .DS_Store
-tbd/
-tbd_*
+tmp/
+tmp_*

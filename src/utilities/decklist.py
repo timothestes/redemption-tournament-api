@@ -21,8 +21,8 @@ class Decklist:
         self.reserve_size = self._get_size_of(self.mapped_reserve_list)
         self.deck_type = deck_type
 
-        # self._save_json("tbd_reserve_list.json", self.mapped_reserve_list)
-        # self._save_json("tbd_main_deck_list.json", self.mapped_main_deck_list)
+        # self._save_json("tmp_reserve_list.json", self.mapped_reserve_list)
+        # self._save_json("tmp_main_deck_list.json", self.mapped_main_deck_list)
         if self.deck_size < 50:
             raise AssertionError(
                 "Please load a deck_file that contains at least 50 cards in the main deck."

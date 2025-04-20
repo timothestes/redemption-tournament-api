@@ -138,11 +138,11 @@ def generate_decklist(deck_type: str, deck_data, filename: str):
         template_path = "assets/pdfs/t2_deck_check.pdf"
 
     # Create output directory if it doesn't exist
-    os.makedirs("tbd", exist_ok=True)
+    os.makedirs("tmp", exist_ok=True)
 
     # Use dynamic filename for output
-    output_path = f"tbd/{filename}.pdf"
-    temp_overlay = f"tbd/temp_{filename}.pdf"
+    output_path = f"tmp/{filename}.pdf"
+    temp_overlay = f"tmp/temp_{filename}.pdf"
 
     reader = PdfReader(template_path)
     page = reader.pages[0]
@@ -456,6 +456,6 @@ def generate_decklist(deck_type: str, deck_data, filename: str):
 if __name__ == "__main__":
     import json
 
-    with open("tbd/deck_data.json", "r") as f:
+    with open("tmp/deck_data.json", "r") as f:
         deck_data = json.load(f)
     generate_decklist("type_1", deck_data, "output_decklist")
