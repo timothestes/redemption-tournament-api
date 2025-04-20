@@ -138,7 +138,7 @@ def generate_decklist(deck_type: str, deck_data, filename: str):
         template_path = "assets/pdfs/t2_deck_check.pdf"
 
     # Create output directory if it doesn't exist
-    os.makedirs("tmp", exist_ok=True)
+    os.makedirs("/tmp", exist_ok=True)
 
     # Use dynamic filename for output
     output_path = f"tmp/{filename}.pdf"
