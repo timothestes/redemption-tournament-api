@@ -50,16 +50,20 @@ def clean_card_name(card_name, card_data):
 def place_section(c, section_data, x, y, line_spacing, add_quantity=True):
     """
     Place sorted items from section_data at (x, y) on the canvas.
+    If add_quantity is False, list each card multiple times based on quantity.
     """
     for card_name, card_data in sorted(section_data.items(), key=lambda item: item[0]):
         display_name = clean_card_name(card_name, card_data)
-        display_text = (
-            f"{card_data.get('quantity', 1)}x {display_name}"
-            if add_quantity
-            else display_name
-        )
-        c.drawString(x, y, display_text)
-        y -= line_spacing
+        if add_quantity:
+            display_text = f"{card_data.get('quantity', 1)}x {display_name}"
+            c.drawString(x, y, display_text)
+            y -= line_spacing
+        else:
+            # List the card multiple times based on quantity
+            quantity = card_data.get("quantity", 1)
+            for _ in range(quantity):
+                c.drawString(x, y, display_name)
+                y -= line_spacing
 
 
 def draw_count(

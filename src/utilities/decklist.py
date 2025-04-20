@@ -25,7 +25,7 @@ class Decklist:
         # self._save_json("tmp_main_deck_list.json", self.mapped_main_deck_list)
         if self.deck_size < 50:
             raise AssertionError(
-                "Please load a deck_file that contains at least 50 cards in the main deck."
+                "Please load a deck that contains at least 50 cards in the main deck."
             )
         if self.deck_size > 252 and deck_type == "type_2":
             raise AssertionError(
