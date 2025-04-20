@@ -122,7 +122,7 @@ def place_section_by_type(c, deck, height_points, card_types, x, y, add_quantity
     place_section(c, filtered, x, y, line_spacing, add_quantity)
 
 
-def generate_decklist_pdf(deck_type: str, deck_data, filename: str):
+def make_pdf(deck_type: str, deck_data, filename: str):
     """
     Generate a deck check sheet overlay with card listings, section counts,
     and a total card count.
