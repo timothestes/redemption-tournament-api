@@ -5,7 +5,7 @@ from src.utilities.decklist import Decklist
 from src.utilities.text_to_pdf import make_pdf
 
 
-def generate_pdf(deck_data: str, deck_type: str):
+def generate_pdf(deck_data: str, deck_type: str, name: str, event: str):
     unique_filename = f"{str(uuid4())}"
 
     with tempfile.NamedTemporaryFile(mode="w", delete=True) as temp_file:
@@ -13,7 +13,7 @@ def generate_pdf(deck_data: str, deck_type: str):
         temp_file.flush()  # Ensure all data is written
         deck_data = Decklist(temp_file.name, deck_type=deck_type).to_json()
 
-    make_pdf(deck_type, deck_data, filename=unique_filename)
+    make_pdf(deck_type, deck_data, filename=unique_filename, name=name, event=event)
 
     return (
         unique_filename,

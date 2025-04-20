@@ -1,8 +1,13 @@
 import os
 import re
 
+from dotenv import load_dotenv
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
+
+from src.utilities.config import str_to_bool
+
+load_dotenv()
 
 # Precompile regex patterns for efficiency.
 SET_NAME_PATTERN = re.compile(r"(\([^)]*\))\s*$")
@@ -122,7 +127,7 @@ def place_section_by_type(c, deck, height_points, card_types, x, y, add_quantity
     place_section(c, filtered, x, y, line_spacing, add_quantity)
 
 
-def make_pdf(deck_type: str, deck_data, filename: str):
+def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
     """
     Generate a deck check sheet overlay with card listings, section counts,
     and a total card count.
@@ -133,11 +138,15 @@ def make_pdf(deck_type: str, deck_data, filename: str):
         template_path = "assets/pdfs/t2_deck_check.pdf"
 
     # Create output directory if it doesn't exist
-    os.makedirs("/tmp", exist_ok=True)
+    if str_to_bool(os.getenv("DEBUG")):
+        deck_directory = "tmp"
+    else:
+        deck_directory = "/tmp"
+    os.makedirs(deck_directory, exist_ok=True)
 
     # Use system temp directory for all temporary files
-    output_path = os.path.join("/tmp", f"{filename}.pdf")
-    temp_overlay = os.path.join("/tmp", f"temp_{filename}.pdf")
+    output_path = os.path.join(deck_directory, f"{filename}.pdf")
+    temp_overlay = os.path.join(deck_directory, f"temp_{filename}.pdf")
 
     reader = PdfReader(template_path)
     page = reader.pages[0]
@@ -432,6 +441,30 @@ def make_pdf(deck_type: str, deck_data, filename: str):
         f"Neutral Count: {total_neutral}",
     )
 
+    # Add player name
+    box_width = 50
+    box_height = 30
+    right_margin = 290
+    top_margin = 16
+    c.setFont("Helvetica", 24)
+    c.drawString(
+        width_points - right_margin - box_width + 5,
+        height_points - top_margin - box_height + 10,
+        name,
+    )
+
+    # add event name
+    box_width = 50
+    box_height = 30
+    right_margin = 290
+    top_margin = 56
+    c.setFont("Helvetica", 24)
+    c.drawString(
+        width_points - right_margin - box_width + 5,
+        height_points - top_margin - box_height + 10,
+        event,
+    )
+
     c.showPage()
     c.save()
 
@@ -453,4 +486,5 @@ if __name__ == "__main__":
 
     with open("tmp/deck_data.json", "r") as f:
         deck_data = json.load(f)
-    generate_decklist("type_1", deck_data, "output_decklist")
+    make_pdf("type_1", deck_data, "output_decklist", "Player Name", "Event Name")
+    print("PDF generated successfully.")

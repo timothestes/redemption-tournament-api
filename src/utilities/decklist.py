@@ -126,10 +126,12 @@ class Decklist:
         with open(self.card_data_path, "r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file, delimiter="\t")
             for row in reader:
-                # Create a new dictionary with all keys converted to lower case
-                row_with_lower_keys = {key.lower(): value for key, value in row.items()}
+                # Strip whitespace from all values
+                row_with_lower_keys = {
+                    key.lower(): value.strip() for key, value in row.items()
+                }
                 normalized_name = self.normalize_apostrophes(
-                    row_with_lower_keys["name"]
+                    row_with_lower_keys["name"].strip()  # Make sure to strip here too
                 )
                 card_database[normalized_name] = row_with_lower_keys
 

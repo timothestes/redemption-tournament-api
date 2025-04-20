@@ -30,8 +30,12 @@ def generate_decklist():
         if "decklist" not in data or "decklist_type" not in data:
             return jsonify({"error": "invalid request"}), 400
 
+        # with open("decklist.txt", "w") as f:
+        #     f.write(data["decklist"])
         # Generate PDF
-        filename, file_path = generate_pdf(data["decklist"], data["decklist_type"])
+        filename, file_path = generate_pdf(
+            data["decklist"], data["decklist_type"], data["name"], data["event"]
+        )
 
         # Upload to Supabase
         with open(file_path, "rb") as pdf_file:
@@ -63,7 +67,10 @@ def generate_decklist():
         return jsonify({"status": "error", "message": str(e)}), 400
     except Exception as e:
         print(traceback.format_exc())
-        return jsonify({"error": "something unexpected happened"}), 500
+        return (
+            jsonify({"status": "error", "message": "something unexpected happened"}),
+            500,
+        )
     finally:
         if file_path and os.path.exists(file_path):
             os.remove(file_path)
