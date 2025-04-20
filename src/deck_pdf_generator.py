@@ -17,5 +17,5 @@ def generate_pdf(deck_data: str, deck_type: str):
 
     return (
         unique_filename,
-        f"tmp/{unique_filename}.pdf",
+        f"/tmp/{unique_filename}.pdf",
     )
