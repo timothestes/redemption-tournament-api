@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
-from config import str_to_bool
 from routes import register_routes
+from src.utilities.config import str_to_bool
 
 load_dotenv()
 app = Flask(__name__)
