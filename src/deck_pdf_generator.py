@@ -7,7 +7,14 @@ from src.utilities.decklist import Decklist
 from src.utilities.text_to_pdf import make_pdf
 
 
-def generate_pdf(deck_data: str, deck_type: str, name: str, event: str):
+def generate_pdf(
+    deck_data: str,
+    deck_type: str,
+    name: str,
+    event: str,
+    show_alignment: bool,
+    color_alignment: bool,
+):
     unique_filename = f"{str(uuid4())}"
 
     with tempfile.NamedTemporaryFile(mode="w", delete=True) as temp_file:

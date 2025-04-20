@@ -17,3 +17,5 @@ test:
 
 run:
 	python3 -m app
+dev:
+	python3 -m app

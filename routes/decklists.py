@@ -34,7 +34,12 @@ def generate_decklist():
         #     f.write(data["decklist"])
         # Generate PDF
         filename, file_path = generate_pdf(
-            data["decklist"], data["decklist_type"], data["name"], data["event"]
+            data["decklist"],
+            data["decklist_type"],
+            data["name"],
+            data["event"],
+            show_alignment=data.get("show_alignment", False),
+            color_alignment=data.get("color_alignment", False),
         )
 
         # Upload to Supabase

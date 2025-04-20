@@ -47,13 +47,27 @@ def clean_card_name(card_name, card_data):
     return card_name
 
 
-def place_section(c, section_data, x, y, line_spacing, add_quantity=True):
+def place_section(
+    c, section_data, x, y, line_spacing, add_quantity=True, color_alignment=False
+):
     """
     Place sorted items from section_data at (x, y) on the canvas.
     If add_quantity is False, list each card multiple times based on quantity.
+    If color_alignment is True, cards are colored based on their alignment.
     """
     for card_name, card_data in sorted(section_data.items(), key=lambda item: item[0]):
         display_name = clean_card_name(card_name, card_data)
+
+        # Set color based on alignment if enabled
+        if color_alignment:
+            alignment = card_data.get("alignment", "Neutral")
+            if alignment == "Good":
+                c.setFillColorRGB(0, 0.5, 0)  # Green
+            elif alignment == "Evil":
+                c.setFillColorRGB(0.8, 0, 0)  # Red
+            elif alignment == "Neutral":
+                c.setFillColorRGB(0.5, 0.5, 0.5)  # Gray
+
         if add_quantity:
             display_text = f"{card_data.get('quantity', 1)}x {display_name}"
             c.drawString(x, y, display_text)
@@ -64,6 +78,45 @@ def place_section(c, section_data, x, y, line_spacing, add_quantity=True):
             for _ in range(quantity):
                 c.drawString(x, y, display_name)
                 y -= line_spacing
+
+        # Reset color to black after drawing
+        if color_alignment:
+            c.setFillColorRGB(0, 0, 0)
+
+
+def place_section_by_type(
+    c, deck, height_points, card_types, x, y, add_quantity=True, color_alignment=False
+):
+    """
+    Filter main_deck by card_types and place the section.
+    """
+    y = height_points - y
+    line_spacing = 16
+    if isinstance(card_types, str):
+        filtered = {k: v for k, v in deck.items() if v.get("type") == card_types}
+    else:
+        filtered = {k: v for k, v in deck.items() if v.get("type") in card_types}
+    if card_types == "misc":
+        filtered = {}
+        for key, value in deck.items():
+            if value.get("type") not in [
+                "Dominant",
+                "Hero",
+                "GE",
+                "Lost Soul",
+                "Evil Character",
+                "EE",
+                "Artifact",
+                "Fortress",
+                "Site",
+                "Curse",
+                "Covenant",
+                "City",
+            ]:
+                filtered[key] = value
+    elif card_types == "all":
+        filtered = deck
+    place_section(c, filtered, x, y, line_spacing, add_quantity, color_alignment)
 
 
 def draw_count(
@@ -98,40 +151,15 @@ def draw_count(
     c.drawString(x, y, str(total))
 
 
-def place_section_by_type(c, deck, height_points, card_types, x, y, add_quantity=True):
-    """
-    Filter main_deck by card_types and place the section.
-    """
-    y = height_points - y
-    line_spacing = 16
-    if isinstance(card_types, str):
-        filtered = {k: v for k, v in deck.items() if v.get("type") == card_types}
-    else:
-        filtered = {k: v for k, v in deck.items() if v.get("type") in card_types}
-    if card_types == "misc":
-        filtered = {}
-        for key, value in deck.items():
-            if value.get("type") not in [
-                "Dominant",
-                "Hero",
-                "GE",
-                "Lost Soul",
-                "Evil Character",
-                "EE",
-                "Artifact",
-                "Fortress",
-                "Site",
-                "Curse",
-                "Covenant",
-                "City",
-            ]:
-                filtered[key] = value
-    elif card_types == "all":
-        filtered = deck
-    place_section(c, filtered, x, y, line_spacing, add_quantity)
-
-
-def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
+def make_pdf(
+    deck_type: str,
+    deck_data,
+    filename: str,
+    name: str,
+    event: str,
+    show_alignment: bool = False,
+    color_alignment: bool = False,
+):
     """
     Generate a deck check sheet overlay with card listings, section counts,
     and a total card count.
@@ -216,7 +244,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
             },
         }
 
-    # Draw card listings
+    # Draw card listings with color_alignment option
     place_section_by_type(
         c,
         main_deck,
@@ -224,6 +252,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "Dominant",
         x=section_mappings["lists"]["Dominant"]["x"],
         y=section_mappings["lists"]["Dominant"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -232,6 +261,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "Hero",
         x=section_mappings["lists"]["Hero"]["x"],
         y=section_mappings["lists"]["Hero"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -240,6 +270,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "GE",
         x=section_mappings["lists"]["GE"]["x"],
         y=section_mappings["lists"]["GE"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -248,6 +279,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "Lost Soul",
         x=section_mappings["lists"]["Lost Soul"]["x"],
         y=section_mappings["lists"]["Lost Soul"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -256,6 +288,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "Evil Character",
         x=section_mappings["lists"]["Evil Character"]["x"],
         y=section_mappings["lists"]["Evil Character"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -264,6 +297,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "EE",
         x=section_mappings["lists"]["EE"]["x"],
         y=section_mappings["lists"]["EE"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -272,6 +306,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         ["Artifact", "Covenant", "Curse"],
         x=section_mappings["lists"]["Artifact"]["x"],
         y=section_mappings["lists"]["Artifact"]["y"],
+        color_alignment=color_alignment,
     )
     place_section_by_type(
         c,
@@ -280,9 +315,8 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         ["Fortress", "Site", "City"],
         x=section_mappings["lists"]["Fortress"]["x"],
         y=section_mappings["lists"]["Fortress"]["y"],
+        color_alignment=color_alignment,
     )
-
-    # Misc section (cards not fitting other types)
     place_section_by_type(
         c,
         main_deck,
@@ -290,8 +324,8 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         "misc",
         x=section_mappings["lists"]["Misc"]["x"],
         y=section_mappings["lists"]["Misc"]["y"],
+        color_alignment=color_alignment,
     )
-    # Reserve section (without quantity)
     place_section_by_type(
         c,
         reserve,
@@ -300,6 +334,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         x=section_mappings["lists"]["Reserve"]["x"],
         y=section_mappings["lists"]["Reserve"]["y"],
         add_quantity=False,
+        color_alignment=color_alignment,
     )
 
     # Draw section counts (numbers only; positions are fully controlled)
@@ -397,60 +432,68 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
         f"{total_main}",
     )
 
-    # Draw good count
-    box_width = 50
-    box_height = 30
-    right_margin = 85
-    top_margin = 29
-    total_good = 0
-    for card in main_deck.values():
-        if card.get("alignment") == "Good":
-            total_good += card.get("quantity")
-    c.setFont("Helvetica", 10)
-    c.drawString(
-        width_points - right_margin - box_width + 5,
-        height_points - top_margin - box_height + 10,
-        f"Good Count: {total_good}",
-    )
+    # Draw alignment counts only if show_alignment is True
+    if show_alignment:
+        # Draw good count in green
+        box_width = 50
+        box_height = 30
+        right_margin = 85
+        top_margin = 34
+        total_good = 0
+        for card in main_deck.values():
+            if card.get("alignment") == "Good":
+                total_good += card.get("quantity", 0)
+        c.setFont("Helvetica", 10)
+        c.setFillColorRGB(0, 0.5, 0)  # Green
+        c.drawString(
+            width_points - right_margin - box_width + 5,
+            height_points - top_margin - box_height + 10,
+            f"Good Count: {total_good}",
+        )
 
-    # Draw evil count
-    box_width = 50
-    box_height = 30
-    right_margin = 85
-    top_margin = 42
-    total_evil = 0
-    for card in main_deck.values():
-        if card.get("alignment") == "Evil":
-            total_evil += card.get("quantity")
-    c.setFont("Helvetica", 10)
-    c.drawString(
-        width_points - right_margin - box_width + 5,
-        height_points - top_margin - box_height + 10,
-        f"Evil Count: {total_evil}",
-    )
+        # Draw evil count in red
+        box_width = 50
+        box_height = 30
+        right_margin = 85
+        top_margin = 44
+        total_evil = 0
+        for card in main_deck.values():
+            if card.get("alignment") == "Evil":
+                total_evil += card.get("quantity", 0)
+        c.setFont("Helvetica", 10)
+        c.setFillColorRGB(0.8, 0, 0)  # Red
+        c.drawString(
+            width_points - right_margin - box_width + 5,
+            height_points - top_margin - box_height + 10,
+            f"Evil Count: {total_evil}",
+        )
 
-    # Draw neutral count
-    box_width = 50
-    box_height = 30
-    right_margin = 85
-    top_margin = 53
-    total_neutral = 0
-    for card in main_deck.values():
-        if card.get("alignment") == "Neutral":
-            total_neutral += card.get("quantity")
-    c.setFont("Helvetica", 10)
-    c.drawString(
-        width_points - right_margin - box_width + 5,
-        height_points - top_margin - box_height + 10,
-        f"Neutral Count: {total_neutral}",
-    )
+        # Draw neutral count in gray
+        box_width = 50
+        box_height = 30
+        right_margin = 85
+        top_margin = 54
+        total_neutral = 0
+        for card in main_deck.values():
+            if card.get("alignment") == "Neutral":
+                total_neutral += card.get("quantity", 0)
+        c.setFont("Helvetica", 10)
+        c.setFillColorRGB(0.5, 0.5, 0.5)  # Gray
+        c.drawString(
+            width_points - right_margin - box_width + 5,
+            height_points - top_margin - box_height + 10,
+            f"Neutral Count: {total_neutral}",
+        )
+
+        # Reset color to black for remaining text
+        c.setFillColorRGB(0, 0, 0)
 
     # Add player name
     box_width = 50
     box_height = 30
     right_margin = 290
     top_margin = 16
-    c.setFont("Helvetica", 24)
+    c.setFont("Times-Roman", 24)
     c.drawString(
         width_points - right_margin - box_width + 5,
         height_points - top_margin - box_height + 10,
@@ -462,7 +505,7 @@ def make_pdf(deck_type: str, deck_data, filename: str, name: str, event: str):
     box_height = 30
     right_margin = 290
     top_margin = 56
-    c.setFont("Helvetica", 20)
+    c.setFont("Times-Roman", 20)  # Changed from Times-Bold to Times-Roman
     c.drawString(
         width_points - right_margin - box_width + 5,
         height_points - top_margin - box_height + 10,
@@ -490,5 +533,13 @@ if __name__ == "__main__":
 
     with open("tmp/deck_data.json", "r") as f:
         deck_data = json.load(f)
-    make_pdf("type_1", deck_data, "output_decklist", "Player Name", "Event Name")
+    make_pdf(
+        "type_1",
+        deck_data,
+        "output_decklist",
+        "Player Name",
+        "Event Name",
+        False,
+        False,
+    )
     print("PDF generated successfully.")
