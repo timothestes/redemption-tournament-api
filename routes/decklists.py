@@ -39,7 +39,6 @@ def generate_decklist():
             data["name"],
             data["event"],
             show_alignment=data.get("show_alignment", False),
-            color_alignment=data.get("color_alignment", False),
         )
 
         # Upload to Supabase

@@ -13,7 +13,6 @@ def generate_pdf(
     name: str,
     event: str,
     show_alignment: bool,
-    color_alignment: bool,
 ):
     unique_filename = f"{str(uuid4())}"
 
@@ -22,7 +21,14 @@ def generate_pdf(
         temp_file.flush()  # Ensure all data is written
         deck_data = Decklist(temp_file.name, deck_type=deck_type).to_json()
 
-    make_pdf(deck_type, deck_data, filename=unique_filename, name=name, event=event)
+    make_pdf(
+        deck_type,
+        deck_data,
+        filename=unique_filename,
+        name=name,
+        event=event,
+        show_alignment=show_alignment,
+    )
     if str_to_bool(os.getenv("DEBUG")):
         output_dir = "tmp"
     else:

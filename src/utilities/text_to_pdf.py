@@ -158,12 +158,15 @@ def make_pdf(
     name: str,
     event: str,
     show_alignment: bool = False,
-    color_alignment: bool = False,
 ):
     """
     Generate a deck check sheet overlay with card listings, section counts,
     and a total card count.
     """
+    if show_alignment:
+        color_alignment = True
+    else:
+        color_alignment = False
     if deck_type == "type_1":
         template_path = "assets/pdfs/t1_deck_check.pdf"
     elif deck_type == "type_2":
