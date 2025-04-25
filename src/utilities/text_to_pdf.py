@@ -66,7 +66,9 @@ def place_section(
             elif alignment == "Evil":
                 c.setFillColorRGB(0.8, 0, 0)  # Red
             elif alignment == "Neutral":
-                c.setFillColorRGB(0.5, 0.5, 0.5)  # Gray
+                c.setFillColorRGB(
+                    0.3, 0.3, 0.3
+                )  # Darker Gray (changed from 0.5, 0.5, 0.5)
 
         if add_quantity:
             display_text = f"{card_data.get('quantity', 1)}x {display_name}"
@@ -481,7 +483,7 @@ def make_pdf(
             if card.get("alignment") == "Neutral":
                 total_neutral += card.get("quantity", 0)
         c.setFont("Helvetica", 10)
-        c.setFillColorRGB(0.5, 0.5, 0.5)  # Gray
+        c.setFillColorRGB(0.3, 0.3, 0.3)  # Darker Gray (changed from 0.5, 0.5, 0.5)
         c.drawString(
             width_points - right_margin - box_width + 5,
             height_points - top_margin - box_height + 10,
@@ -532,17 +534,15 @@ def make_pdf(
 
 
 if __name__ == "__main__":
-    import json
+    from src.utilities.decklist import Decklist
 
-    with open("tmp/deck_data.json", "r") as f:
-        deck_data = json.load(f)
+    deck_data = Decklist("tmp/decklist.txt", deck_type="type_2").to_json()
     make_pdf(
-        "type_1",
+        "type_2",
         deck_data,
         "output_decklist",
         "Player Name",
         "Event Name",
-        False,
-        False,
+        True,
     )
     print("PDF generated successfully.")

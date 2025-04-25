@@ -19,3 +19,5 @@ run:
 	python3 -m app
 dev:
 	python3 -m app
+pdf:
+	python3 -m src.utilities.text_to_pdf
