@@ -179,6 +179,10 @@ def main():
         print(f"Error: Source directory '{SOURCE_IMAGE_DIRECTORY}' does not exist!")
         return
 
+    if not Path(TARGET_IMAGE_DIRECTORY).exists():
+        print(f"Error: Target directory '{TARGET_IMAGE_DIRECTORY}' does not exist!")
+        return
+
     # Run the conversion
     convert_jpg_to_webp(SOURCE_IMAGE_DIRECTORY, TARGET_IMAGE_DIRECTORY)
 
