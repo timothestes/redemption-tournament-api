@@ -7,7 +7,9 @@ from src.utilities.brigades import normalize_brigade_field
 
 class Decklist:
 
-    def __init__(self, deck_file_path: str, deck_type: str):
+    def __init__(
+        self, deck_file_path: str, deck_type: str, bypass_assertions: bool = False
+    ):
         self.card_data_path = "assets/carddata/carddata.txt"
         self.deck_file_path = deck_file_path
         self.main_deck_list = []
@@ -23,6 +25,8 @@ class Decklist:
 
         # self._save_json("tmp_reserve_list.json", self.mapped_reserve_list)
         # self._save_json("tmp_main_deck_list.json", self.mapped_main_deck_list)
+        if bypass_assertions:
+            return
         if self.deck_size < 50:
             raise AssertionError(
                 "Please load a deck that contains at least 50 cards in the main deck."

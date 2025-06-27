@@ -17,7 +17,9 @@ def generate_webp(
     with tempfile.NamedTemporaryFile(mode="w", delete=True) as temp_file:
         temp_file.write(deck_data)
         temp_file.flush()  # Ensure all data is written
-        deck_data = Decklist(temp_file.name, deck_type=deck_type).to_json()
+        deck_data = Decklist(
+            temp_file.name, deck_type=deck_type, bypass_assertions=True
+        ).to_json()
 
     # Call make_webp and get the actual file path
     webp_file_path = make_webp(
