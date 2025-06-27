@@ -7,7 +7,66 @@ import PIL.ImageDraw as ImageDraw
 from src.utilities.config import str_to_bool
 
 dotenv.load_dotenv()
-DECKLIST_IMAGES_FOLDER = "assets/setimages/general"
+DECKLIST_IMAGES_FOLDER = "assets/cardimages"
+CARDDATA_FILE = "assets/carddata/carddata.txt"
+
+
+def load_carddata_filenames() -> set:
+    """
+    Load all image filenames from carddata.txt to preserve original naming.
+
+    Returns:
+        set: Set of original image filenames from carddata.txt
+    """
+    carddata_filenames = set()
+
+    try:
+        with open(CARDDATA_FILE, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.strip()
+                if not line or line.startswith("#"):  # Skip empty lines and comments
+                    continue
+
+                # Split by tab and get the image filename (3rd column, index 2)
+                parts = line.split("\t")
+                if len(parts) > 2:
+                    image_filename = parts[2].strip()
+                    if image_filename:  # Only add non-empty filenames
+                        carddata_filenames.add(image_filename)
+
+    except FileNotFoundError:
+        print(f"Warning: {CARDDATA_FILE} not found. Using fallback logic.")
+    except Exception as e:
+        print(f"Error reading {CARDDATA_FILE}: {e}")
+
+    return carddata_filenames
+
+
+def normalize_filename_for_webp(original_filename: str, carddata_filenames: set) -> str:
+    """
+    Convert filename to WebP format, preserving original naming from carddata.txt.
+
+    Args:
+        original_filename (str): The original filename from deck data
+            (e.g., "The-Judean-Mediums-Regional" or "The_Jeering_Youths_(RA)")
+        carddata_filenames (set): Set of filenames from carddata.txt
+
+    Returns:
+        str: The WebP filename (e.g., "The-Judean-Mediums-Regional.jpg.webp" or
+             "The_Jeering_Youths_(RA).webp")
+    """
+    # Look for this filename in carddata
+    for carddata_name in carddata_filenames:
+        # Check if the carddata name matches our original filename
+        if carddata_name == original_filename:
+            # Found exact match - this could be either case
+            return f"{carddata_name}.webp"
+        elif carddata_name == f"{original_filename}.jpg":
+            # Edge case: carddata has the .jpg version
+            return f"{carddata_name}.webp"
+
+    # Fallback: if not found in carddata, just add .webp
+    return f"{original_filename}.webp"
 
 
 def make_webp(
@@ -97,14 +156,15 @@ def _generate_deck_image(
         expanded_deck_items, key=lambda item: item[1].get("type", "")
     )
 
-    # Load the first card image to determine the size for consistent dimensions
-    sample_image_path = os.path.join(
-        DECKLIST_IMAGES_FOLDER, sorted_deck_items[0][1]["imagefile"]
-    )
+    # Load carddata filenames for proper filename handling
+    carddata_filenames = load_carddata_filenames()
 
-    # Ensure the image has the correct extension
-    if not sample_image_path.lower().endswith(".jpg"):
-        sample_image_path += ".jpg"
+    # Load the first card image to determine the size for consistent dimensions
+    sample_image_filename = sorted_deck_items[0][1]["imagefile"]
+    normalized_sample_filename = normalize_filename_for_webp(
+        sample_image_filename, carddata_filenames
+    )
+    sample_image_path = os.path.join(DECKLIST_IMAGES_FOLDER, normalized_sample_filename)
 
     try:
         sample_image = Image.open(sample_image_path)
@@ -136,9 +196,9 @@ def _generate_deck_image(
             print(f"Warning: No image file specified for card '{card_key}'")
             continue
 
-        # Ensure the image file has the correct extension
-        if not image_file.lower().endswith(".jpg"):
-            image_file += ".jpg"
+        # Normalize the image filename using carddata information
+        image_file = normalize_filename_for_webp(image_file, carddata_filenames)
+
         card_image_path = os.path.join(DECKLIST_IMAGES_FOLDER, image_file)
 
         try:
@@ -256,3 +316,41 @@ def _cleanup_individual_images(main_deck_image_path: str, reserve_deck_image_pat
             print(f"Deleted reserve deck image: {reserve_deck_image_path}")
     except OSError as e:
         print(f"Error deleting individual deck images: {e}")
+
+
+def normalize_image_filename(filename: str) -> str:
+    """
+    Normalize an image filename to find the correct WebP file.
+    Handles cases where filenames might have .jpg extensions that need to be removed.
+
+    Examples:
+        'The-Judean-Mediums-Regional.jpg' -> 'The-Judean-Mediums-Regional.webp'
+        'Holy-Grail' -> 'Holy-Grail.webp'
+        '006-Holy-Grail.jpg' -> '006-Holy-Grail.webp'
+
+    Args:
+        filename (str): The original filename from the card data
+
+    Returns:
+        str: Normalized filename with .webp extension
+    """
+    # Remove common image extensions
+    extensions_to_remove = [
+        ".jpg",
+        ".jpeg",
+        ".JPG",
+        ".JPEG",
+        ".png",
+        ".PNG",
+        ".webp",
+        ".WEBP",
+    ]
+
+    normalized = filename
+    for ext in extensions_to_remove:
+        if normalized.endswith(ext):
+            normalized = normalized[: -len(ext)]
+            break
+
+    # Add .webp extension
+    return f"{normalized}.webp"

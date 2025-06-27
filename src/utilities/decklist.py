@@ -25,7 +25,17 @@ class Decklist:
 
         # self._save_json("tmp_reserve_list.json", self.mapped_reserve_list)
         # self._save_json("tmp_main_deck_list.json", self.mapped_main_deck_list)
+
         if bypass_assertions:
+            # still keep some assertions
+            if self.deck_size > 252:
+                raise AssertionError(
+                    "Please load a deck that contains 252 or less cards in the main deck."
+                )
+            if self.reserve_size > 20:
+                raise AssertionError(
+                    "Please load a deck that contains 20 or less cards in the reserve."
+                )
             return
         if self.deck_size < 50:
             raise AssertionError(
