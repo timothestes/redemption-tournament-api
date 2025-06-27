@@ -21,3 +21,5 @@ dev:
 	python3 -m app
 pdf:
 	python3 -m src.utilities.text_to_pdf
+webp:
+	python3 -m src.utilities.generate_webp
