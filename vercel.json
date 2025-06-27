@@ -17,10 +17,5 @@
                 { "key": "Access-Control-Max-Age", "value": "86400" }
             ]
         }
-    ],
-    "functions": {
-        "app.py": {
-            "maxDuration": 60
-        }
-    }
+    ]
 }
