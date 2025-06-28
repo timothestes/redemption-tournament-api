@@ -1,4 +1,5 @@
-CARD_DATA_PATH = "assets/carddata/carddata.jsonl"
+CARD_DATA_JSON_FILE = "assets/carddata/carddata.jsonl"
+CARDDATA_FILE = "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"
 
 GOOD_BRIGADES = [
     "Good Gold",

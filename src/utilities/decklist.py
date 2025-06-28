@@ -2,6 +2,7 @@ import json
 import xml.etree.ElementTree as ET
 
 from src.utilities.brigades import normalize_brigade_field
+from src.utilities.vars import CARD_DATA_JSON_FILE
 
 
 class Decklist:
@@ -9,7 +10,7 @@ class Decklist:
     def __init__(
         self, deck_file_path: str, deck_type: str, bypass_assertions: bool = False
     ):
-        self.card_data_path = "assets/carddata/carddata.jsonl"
+        self.card_data_path = CARD_DATA_JSON_FILE
         self.deck_file_path = deck_file_path
         self.main_deck_list = []
         self.reserve_list = []

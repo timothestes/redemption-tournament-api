@@ -10,8 +10,7 @@ import csv
 import json
 from typing import Any, Dict
 
-CARDDATA_FILE = "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"
-JSONL_FILE = "assets/carddata/carddata.jsonl"
+from src.utilities.vars import CARD_DATA_JSON_FILE, CARDDATA_FILE
 
 
 def normalize_apostrophes(text: str) -> str:
@@ -25,7 +24,7 @@ def convert_to_jsonl() -> None:
     Each line in the output file will be a JSON object representing one card.
     """
     input_path = CARDDATA_FILE
-    output_path = JSONL_FILE
+    output_path = CARD_DATA_JSON_FILE
 
     cards_processed = 0
 
@@ -77,7 +76,7 @@ def load_jsonl_as_dict(jsonl_path: str = None) -> Dict[str, Dict[str, Any]]:
         Dictionary where keys are card names and values are card data dictionaries
     """
     if jsonl_path is None:
-        jsonl_path = JSONL_FILE
+        jsonl_path = CARD_DATA_JSON_FILE
 
     card_database = {}
 

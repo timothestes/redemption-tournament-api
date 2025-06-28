@@ -6,10 +6,10 @@ import PIL.Image as Image
 import PIL.ImageDraw as ImageDraw
 
 from src.utilities.config import str_to_bool
+from src.utilities.vars import CARD_DATA_JSON_FILE
 
 dotenv.load_dotenv()
 DECKLIST_IMAGES_FOLDER = "assets/cardimages"
-CARDDATA_FILE = "assets/carddata/carddata.jsonl"
 
 
 def load_carddata_filenames() -> set:
@@ -22,7 +22,7 @@ def load_carddata_filenames() -> set:
     carddata_filenames = set()
 
     try:
-        with open(CARDDATA_FILE, "r", encoding="utf-8") as file:
+        with open(CARD_DATA_JSON_FILE, "r", encoding="utf-8") as file:
             for line in file:
                 if not line.strip():  # Skip empty lines
                     continue
@@ -38,9 +38,9 @@ def load_carddata_filenames() -> set:
                     continue
 
     except FileNotFoundError:
-        print(f"Warning: {CARDDATA_FILE} not found. Using fallback logic.")
+        print(f"Warning: {CARD_DATA_JSON_FILE} not found. Using fallback logic.")
     except Exception as e:
-        print(f"Error reading {CARDDATA_FILE}: {e}")
+        print(f"Error reading {CARD_DATA_JSON_FILE}: {e}")
 
     return carddata_filenames
 

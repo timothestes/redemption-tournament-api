@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from supabase import Client, create_client
 
-from src.deck_image_generator import generate_webp
+from src.deck_generators import generate_webp
 
 load_dotenv()
 
