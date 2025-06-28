@@ -8,7 +8,6 @@ writing one JSON object per line to create a JSONL file.
 
 import csv
 import json
-import os
 from typing import Any, Dict
 
 CARDDATA_FILE = "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"

@@ -23,5 +23,5 @@ pdf:
 	python3 -m src.utilities.text_to_pdf
 webp:
 	python3 -m scripts.generate_webp
-data:
+json:
 	python3 -m scripts.generate_json
