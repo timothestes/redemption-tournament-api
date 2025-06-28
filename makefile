@@ -22,4 +22,6 @@ dev:
 pdf:
 	python3 -m src.utilities.text_to_pdf
 webp:
-	python3 -m src.utilities.generate_webp
+	python3 -m scripts.generate_webp
+data:
+	python3 -m scripts.generate_json
