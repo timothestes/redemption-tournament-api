@@ -1,3 +1,4 @@
+import json
 import os
 
 import dotenv
@@ -8,31 +9,33 @@ from src.utilities.config import str_to_bool
 
 dotenv.load_dotenv()
 DECKLIST_IMAGES_FOLDER = "assets/cardimages"
-CARDDATA_FILE = "assets/carddata/carddata.txt"
+CARDDATA_FILE = "assets/carddata/carddata.jsonl"
 
 
 def load_carddata_filenames() -> set:
     """
-    Load all image filenames from carddata.txt to preserve original naming.
+    Load all image filenames from carddata.jsonl to preserve original naming.
 
     Returns:
-        set: Set of original image filenames from carddata.txt
+        set: Set of original image filenames from carddata.jsonl
     """
     carddata_filenames = set()
 
     try:
         with open(CARDDATA_FILE, "r", encoding="utf-8") as file:
             for line in file:
-                line = line.strip()
-                if not line or line.startswith("#"):  # Skip empty lines and comments
+                if not line.strip():  # Skip empty lines
                     continue
 
-                # Split by tab and get the image filename (3rd column, index 2)
-                parts = line.split("\t")
-                if len(parts) > 2:
-                    image_filename = parts[2].strip()
+                # Parse JSON line and get the imagefile field
+                try:
+                    card_data = json.loads(line.strip())
+                    image_filename = card_data.get("imagefile", "")
                     if image_filename:  # Only add non-empty filenames
                         carddata_filenames.add(image_filename)
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing JSON line: {line[:50]}... - {e}")
+                    continue
 
     except FileNotFoundError:
         print(f"Warning: {CARDDATA_FILE} not found. Using fallback logic.")
@@ -44,12 +47,12 @@ def load_carddata_filenames() -> set:
 
 def normalize_filename_for_webp(original_filename: str, carddata_filenames: set) -> str:
     """
-    Convert filename to WebP format, preserving original naming from carddata.txt.
+    Convert filename to WebP format, preserving original naming from carddata.jsonl.
 
     Args:
         original_filename (str): The original filename from deck data
             (e.g., "The-Judean-Mediums-Regional" or "The_Jeering_Youths_(RA)")
-        carddata_filenames (set): Set of filenames from carddata.txt
+        carddata_filenames (set): Set of filenames from carddata.jsonl
 
     Returns:
         str: The WebP filename (e.g., "The-Judean-Mediums-Regional.jpg.webp" or

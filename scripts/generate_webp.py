@@ -108,8 +108,8 @@ def convert_jpg_to_webp(
 
         # Check if .webp version already exists
         if expected_webp_filename in existing_webp_files:
-            print(f"Skipping {jpg_file.name} - .webp version already exists")
-            print(f"  Expected: {expected_webp_filename}")
+            # print(f"Skipping {jpg_file.name} - .webp version already exists")
+            # print(f"  Expected: {expected_webp_filename}")
             skipped_count += 1
             continue
 

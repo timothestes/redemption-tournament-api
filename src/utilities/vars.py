@@ -1,4 +1,4 @@
-CARD_DATA_PATH = "data/carddata/carddata.txt"
+CARD_DATA_PATH = "assets/carddata/carddata.jsonl"
 
 GOOD_BRIGADES = [
     "Good Gold",

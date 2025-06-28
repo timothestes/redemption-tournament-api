@@ -1,4 +1,3 @@
-import csv
 import json
 import xml.etree.ElementTree as ET
 
@@ -10,7 +9,7 @@ class Decklist:
     def __init__(
         self, deck_file_path: str, deck_type: str, bypass_assertions: bool = False
     ):
-        self.card_data_path = "assets/carddata/carddata.txt"
+        self.card_data_path = "assets/carddata/carddata.jsonl"
         self.deck_file_path = deck_file_path
         self.main_deck_list = []
         self.reserve_list = []
@@ -135,19 +134,16 @@ class Decklist:
             )
 
     def _load_card_data(self) -> dict:
-        """Take the data found in 'card_data_path' and load it into a csv."""
+        """Take the data found in 'card_data_path' and load it from JSONL format."""
         card_database = {}
-        with open(self.card_data_path, "r", newline="", encoding="utf-8") as file:
-            reader = csv.DictReader(file, delimiter="\t")
-            for row in reader:
-                # Strip whitespace from all values
-                row_with_lower_keys = {
-                    key.lower(): value.strip() for key, value in row.items()
-                }
-                normalized_name = self.normalize_apostrophes(
-                    row_with_lower_keys["name"].strip()  # Make sure to strip here too
-                )
-                card_database[normalized_name] = row_with_lower_keys
+        with open(self.card_data_path, "r", encoding="utf-8") as file:
+            for line in file:
+                if line.strip():  # Skip empty lines
+                    card_data = json.loads(line.strip())
+                    # Data is already processed in the JSONL file
+                    # (keys lowercase, values stripped, apostrophes normalized)
+                    card_name = card_data["name"]
+                    card_database[card_name] = card_data
 
         return card_database
 

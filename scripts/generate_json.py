@@ -11,12 +11,8 @@ import json
 import os
 from typing import Any, Dict
 
-# Get the project root directory (two levels up from this script)
-PROJECT_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
-CARDDATA_INPUT_DIR = "/Applications/LackeyCCG/plugins/Redemption/sets/"
-JSONL_OUTPUT_DIR = os.path.join(PROJECT_ROOT, "assets", "carddata")
+CARDDATA_FILE = "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"
+JSONL_FILE = "assets/carddata/carddata.jsonl"
 
 
 def normalize_apostrophes(text: str) -> str:
@@ -24,20 +20,13 @@ def normalize_apostrophes(text: str) -> str:
     return text.replace("\u2019", "'")
 
 
-def convert_to_jsonl(input_path: str = None, output_path: str = None) -> None:
+def convert_to_jsonl() -> None:
     """
     Convert the TSV carddata file to JSONL format.
     Each line in the output file will be a JSON object representing one card.
-
-    Args:
-        input_path: Path to the carddata.txt file (defaults to CARDDATA_INPUT_DIR/carddata.txt)
-        output_path: Path where the JSONL file will be saved
-                    (defaults to JSONL_OUTPUT_DIR/carddata.jsonl)
     """
-    if input_path is None:
-        input_path = os.path.join(CARDDATA_INPUT_DIR, "carddata.txt")
-    if output_path is None:
-        output_path = os.path.join(JSONL_OUTPUT_DIR, "carddata.jsonl")
+    input_path = CARDDATA_FILE
+    output_path = JSONL_FILE
 
     cards_processed = 0
 
@@ -89,7 +78,7 @@ def load_jsonl_as_dict(jsonl_path: str = None) -> Dict[str, Dict[str, Any]]:
         Dictionary where keys are card names and values are card data dictionaries
     """
     if jsonl_path is None:
-        jsonl_path = os.path.join(JSONL_OUTPUT_DIR, "carddata.jsonl")
+        jsonl_path = JSONL_FILE
 
     card_database = {}
 
@@ -122,12 +111,6 @@ def main():
     print("\nVerifying conversion...")
     card_dict = load_jsonl_as_dict()
     print(f"Loaded {len(card_dict)} cards from JSONL file.")
-
-    # Show a sample card
-    # if card_dict:
-    # sample_card_name = next(iter(card_dict))
-    # print(f"\nSample card ({sample_card_name}):")
-    # print(json.dumps(card_dict[sample_card_name], indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
