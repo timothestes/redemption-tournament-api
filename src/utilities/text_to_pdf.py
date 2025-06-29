@@ -1,11 +1,13 @@
 import os
 import re
+from typing import List, Union
 
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
 from src.utilities.config import str_to_bool
+from src.utilities.sort import sort_cards
 
 load_dotenv()
 
@@ -19,7 +21,8 @@ HYPHEN_PATTERN = re.compile(r"\s*-\s*[^]]+")
 def clean_card_name(card_name, card_data):
     """
     Clean the card name.
-    - If the name contains a '/', use the part before it and append any trailing set name in parentheses.
+    - If the name contains a '/', use the part before it and append any
+      trailing set name in parentheses.
     - For Lost Soul cards:
         - Keep quoted nicknames (without quotes)
         - Keep first verse reference only
@@ -48,14 +51,24 @@ def clean_card_name(card_name, card_data):
 
 
 def place_section(
-    c, section_data, x, y, line_spacing, add_quantity=True, color_alignment=False
+    c,
+    section_data,
+    x,
+    y,
+    line_spacing,
+    add_quantity=True,
+    color_alignment=False,
+    sort_by: Union[str, List[str]] = "name",
 ):
     """
     Place sorted items from section_data at (x, y) on the canvas.
     If add_quantity is False, list each card multiple times based on quantity.
     If color_alignment is True, cards are colored based on their alignment.
     """
-    for card_name, card_data in sorted(section_data.items(), key=lambda item: item[0]):
+    # Use our flexible sorting utility
+    sorted_items = sort_cards(section_data, sort_by)
+
+    for card_name, card_data in sorted_items:
         display_name = clean_card_name(card_name, card_data)
 
         # Set color based on alignment if enabled
@@ -87,7 +100,15 @@ def place_section(
 
 
 def place_section_by_type(
-    c, deck, height_points, card_types, x, y, add_quantity=True, color_alignment=False
+    c,
+    deck,
+    height_points,
+    card_types,
+    x,
+    y,
+    add_quantity=True,
+    color_alignment=False,
+    sort_by: Union[str, List[str]] = "name",
 ):
     """
     Filter main_deck by card_types and place the section.
@@ -118,7 +139,9 @@ def place_section_by_type(
                 filtered[key] = value
     elif card_types == "all":
         filtered = deck
-    place_section(c, filtered, x, y, line_spacing, add_quantity, color_alignment)
+    place_section(
+        c, filtered, x, y, line_spacing, add_quantity, color_alignment, sort_by
+    )
 
 
 def draw_count(
@@ -160,10 +183,21 @@ def make_pdf(
     name: str,
     event: str,
     show_alignment: bool = False,
+    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
 ):
     """
     Generate a deck check sheet overlay with card listings, section counts,
     and a total card count.
+
+    Args:
+        deck_type: Type of deck ('type_1' or 'type_2')
+        deck_data: Dictionary containing deck data
+        filename: Output filename
+        name: Player name
+        event: Event name
+        show_alignment: Whether to show alignment colors and counts
+        sort_by: Single field or list of fields to sort by.
+                Available fields: 'alignment', 'brigade', 'type', 'name'
     """
     if show_alignment:
         color_alignment = True
@@ -258,6 +292,7 @@ def make_pdf(
         x=section_mappings["lists"]["Dominant"]["x"],
         y=section_mappings["lists"]["Dominant"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -267,6 +302,7 @@ def make_pdf(
         x=section_mappings["lists"]["Hero"]["x"],
         y=section_mappings["lists"]["Hero"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -276,6 +312,7 @@ def make_pdf(
         x=section_mappings["lists"]["GE"]["x"],
         y=section_mappings["lists"]["GE"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -285,6 +322,7 @@ def make_pdf(
         x=section_mappings["lists"]["Lost Soul"]["x"],
         y=section_mappings["lists"]["Lost Soul"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -294,6 +332,7 @@ def make_pdf(
         x=section_mappings["lists"]["Evil Character"]["x"],
         y=section_mappings["lists"]["Evil Character"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -303,6 +342,7 @@ def make_pdf(
         x=section_mappings["lists"]["EE"]["x"],
         y=section_mappings["lists"]["EE"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -312,6 +352,7 @@ def make_pdf(
         x=section_mappings["lists"]["Artifact"]["x"],
         y=section_mappings["lists"]["Artifact"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -321,6 +362,7 @@ def make_pdf(
         x=section_mappings["lists"]["Fortress"]["x"],
         y=section_mappings["lists"]["Fortress"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -330,6 +372,7 @@ def make_pdf(
         x=section_mappings["lists"]["Misc"]["x"],
         y=section_mappings["lists"]["Misc"]["y"],
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
     place_section_by_type(
         c,
@@ -340,6 +383,7 @@ def make_pdf(
         y=section_mappings["lists"]["Reserve"]["y"],
         add_quantity=False,
         color_alignment=color_alignment,
+        sort_by=sort_by,
     )
 
     # Draw section counts (numbers only; positions are fully controlled)

@@ -171,6 +171,7 @@ class Decklist:
                     # Copy the card data to avoid mutating the original data.
                     card_details = self.card_data[card_name].copy()
                     card_details["quantity"] = quantity
+                    card_details["raw_brigade"] = card_details.get("brigade", "")
                     # brigade normalization
                     card_details["brigade"] = normalize_brigade_field(
                         brigade=card_details.get("brigade", ""),

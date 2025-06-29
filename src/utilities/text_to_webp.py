@@ -1,11 +1,13 @@
 import json
 import os
+from typing import List, Union
 
 import dotenv
 import PIL.Image as Image
 import PIL.ImageDraw as ImageDraw
 
 from src.utilities.config import str_to_bool
+from src.utilities.sort import sort_cards
 from src.utilities.vars import CARD_DATA_JSON_FILE
 
 dotenv.load_dotenv()
@@ -77,6 +79,7 @@ def make_webp(
     deck_data: dict,
     filename: str,
     n_card_columns: int = 10,
+    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
 ):
     """
     Create a WebP image from deck data.
@@ -84,8 +87,10 @@ def make_webp(
     Args:
         deck_type (str): Type of deck ('type_1' or 'type_2')
         deck_data (dict): Dictionary containing deck data with 'main_deck' and 'reserve' keys
+        filename (str): Base filename for output
         n_card_columns (int): Number of card columns per row (default: 10)
-        filename (str): Base filename for output (default: "deck_output")
+        sort_by: Single field or list of fields to sort by.
+                Available fields: 'alignment', 'brigade', 'type', 'name' (default: "type")
 
     Returns:
         str: Path to the generated WebP file
@@ -108,12 +113,12 @@ def make_webp(
 
     # Generate main deck image
     main_deck_image_path = _generate_deck_image(
-        deck_data, "main_deck", main_deck_filename, cards_per_row, output_dir
+        deck_data, "main_deck", main_deck_filename, cards_per_row, output_dir, sort_by
     )
 
     # Generate reserve deck image
     reserve_deck_image_path = _generate_deck_image(
-        deck_data, "reserve", reserve_deck_filename, cards_per_row, output_dir
+        deck_data, "reserve", reserve_deck_filename, cards_per_row, output_dir, sort_by
     )
 
     # Combine images into final WebP
@@ -133,6 +138,7 @@ def _generate_deck_image(
     output_filename: str,
     cards_per_row: int,
     output_dir: str,
+    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
 ) -> str:
     """Generate an image for the specified deck (either 'main_deck' or 'reserve')."""
     if cards_per_row == 0:
@@ -144,9 +150,12 @@ def _generate_deck_image(
         print(f"No data found for '{deck_key}' deck.")
         return None
 
+    # Use the sorting utility to sort cards
+    sorted_deck_items = sort_cards(deck, sort_by)
+
     # Expand deck items by quantity
     expanded_deck_items = []
-    for card_key, card_data in deck.items():
+    for card_key, card_data in sorted_deck_items:
         for _ in range(card_data.get("quantity", 1)):
             expanded_deck_items.append((card_key, card_data))
 
@@ -154,16 +163,11 @@ def _generate_deck_image(
         print(f"No cards found in '{deck_key}' deck.")
         return None
 
-    # Sort the deck by 'type' alphabetically
-    sorted_deck_items = sorted(
-        expanded_deck_items, key=lambda item: item[1].get("type", "")
-    )
-
     # Load carddata filenames for proper filename handling
     carddata_filenames = load_carddata_filenames()
 
     # Load the first card image to determine the size for consistent dimensions
-    sample_image_filename = sorted_deck_items[0][1]["imagefile"]
+    sample_image_filename = expanded_deck_items[0][1]["imagefile"]
     normalized_sample_filename = normalize_filename_for_webp(
         sample_image_filename, carddata_filenames
     )
@@ -193,7 +197,7 @@ def _generate_deck_image(
     # Track positioning for placing card images on the canvas
     x_offset, y_offset = 0, 0
 
-    for card_key, card_data in sorted_deck_items:
+    for card_key, card_data in expanded_deck_items:
         image_file = card_data.get("imagefile", "")
         if not image_file:
             print(f"Warning: No image file specified for card '{card_key}'")
