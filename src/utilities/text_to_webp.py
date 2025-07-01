@@ -267,7 +267,76 @@ def _combine_deck_images(
     if reserve_deck_image_path and os.path.exists(reserve_deck_image_path):
         reserve_deck_image = Image.open(reserve_deck_image_path)
 
-    # If no reserve deck, just return the main deck image
+    # Set line height for the separator line
+    line_height = 50
+    # Set padding between main deck and reserve deck
+    padding = 50
+
+    # If no reserve deck but M count exists, still add the separator bar
+    if not reserve_deck_image and m_count_value is not None:
+        # Use a larger line height for the separator when no reserve deck
+        enhanced_line_height = line_height * 2  # Double the line height
+
+        # Calculate the combined image size with just the separator line
+        combined_width = main_deck_image.width
+        combined_height = main_deck_image.height + enhanced_line_height
+
+        # Create a blank canvas for the combined image with the background color
+        background_color = (30, 32, 43)  # RGB for #1e202b
+        combined_image = Image.new(
+            "RGB", (combined_width, combined_height), background_color
+        )
+
+        # Paste the main deck image at the top
+        combined_image.paste(main_deck_image, (0, 0))
+
+        # Draw a separator line below the main deck image
+        draw = ImageDraw.Draw(combined_image)
+        line_color = (20, 22, 33)
+        line_y_start = main_deck_image.height + (enhanced_line_height // 2)
+        draw.line(
+            (0, line_y_start, combined_width, line_y_start),
+            fill=line_color,
+            width=enhanced_line_height,
+        )
+
+        # Add M count text overlay on the separator line
+        text = f"M Count: {m_count_value}"
+        text_color = (255, 255, 255)  # White text
+
+        try:
+            # Larger font size for better visibility
+            font_size = int(
+                enhanced_line_height * 0.6
+            )  # Bigger font for enhanced visibility
+            font_path = os.path.join("fonts", "dejavu-sans-bold.ttf")
+            font = ImageFont.truetype(font_path, font_size)
+        except Exception as e:
+            print(f"Error loading font: {e}")
+            font = ImageFont.load_default()
+
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_height = bbox[3] - bbox[1]
+
+        # Left align with padding
+        text_x = 20  # Left padding of 20 pixels
+        text_y = line_y_start - (text_height // 2)
+
+        draw.text((text_x, text_y), text, fill=text_color, font=font)
+
+        # Save the combined image using WebP optimization
+        combined_image_path = os.path.join(output_dir, f"{output_filename}.webp")
+        combined_image.save(
+            combined_image_path, format="WEBP", quality=80, optimize=True
+        )
+
+        file_size_mb = os.path.getsize(combined_image_path) / (1024 * 1024)
+        print(f"Combined deck image saved to {combined_image_path}")
+        print(f"File size: {file_size_mb:.2f}MB")
+
+        return combined_image_path
+
+    # If no reserve deck and no M count, just return the main deck image
     if not reserve_deck_image:
         combined_image_path = os.path.join(output_dir, f"{output_filename}.webp")
         main_deck_image.save(
@@ -275,12 +344,7 @@ def _combine_deck_images(
         )
         return combined_image_path
 
-    # Set line height for the separator line
-    line_height = 50
-    # Set padding between main deck and reserve deck
-    padding = 50
-
-    # Calculate the combined image size
+    # Calculate the combined image size for main deck + reserve deck
     combined_width = max(main_deck_image.width, reserve_deck_image.width)
     combined_height = (
         main_deck_image.height + reserve_deck_image.height + line_height + padding
