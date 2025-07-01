@@ -5,6 +5,7 @@ from typing import List, Union
 import dotenv
 import PIL.Image as Image
 import PIL.ImageDraw as ImageDraw
+from PIL import ImageFont
 
 from src.utilities.config import str_to_bool
 from src.utilities.sort import sort_cards
@@ -80,6 +81,7 @@ def make_webp(
     filename: str,
     n_card_columns: int = 10,
     sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
+    m_count_value: float = None,
 ):
     """
     Create a WebP image from deck data.
@@ -91,6 +93,7 @@ def make_webp(
         n_card_columns (int): Number of card columns per row (default: 10)
         sort_by: Single field or list of fields to sort by.
                 Available fields: 'alignment', 'brigade', 'type', 'name' (default: "type")
+        m_count_value (float): The calculated M count value to display (default: None)
 
     Returns:
         str: Path to the generated WebP file
@@ -123,7 +126,11 @@ def make_webp(
 
     # Combine images into final WebP
     combined_image_path = _combine_deck_images(
-        main_deck_image_path, reserve_deck_image_path, filename, output_dir
+        main_deck_image_path,
+        reserve_deck_image_path,
+        filename,
+        output_dir,
+        m_count_value,
     )
 
     # Clean up individual images
@@ -242,6 +249,7 @@ def _combine_deck_images(
     reserve_deck_image_path: str,
     output_filename: str,
     output_dir: str,
+    m_count_value: float = None,
 ) -> str:
     """
     Combine the main deck and reserve deck images into a single image,
@@ -296,6 +304,28 @@ def _combine_deck_images(
         fill=line_color,
         width=line_height,
     )
+
+    # Add M count text overlay on the separator line if provided
+    if m_count_value is not None:
+        text = f"M Count: {m_count_value}"
+        text_color = (255, 255, 255)  # White text
+
+        try:
+            font_size = int(line_height * 2.1)
+            font_path = os.path.join("fonts", "dejavu-sans-bold.ttf")
+            font = ImageFont.truetype(font_path, font_size)
+        except Exception as e:
+            print(f"Error loading font: {e}")
+            font = ImageFont.load_default()
+
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_height = bbox[3] - bbox[1]
+
+        # Left align with padding
+        text_x = 20  # Left padding of 20 pixels
+        text_y = line_y_start - (text_height // 2)
+
+        draw.text((text_x, text_y), text, fill=text_color, font=font)
 
     # Paste the reserve deck image below the line, with added padding
     reserve_y_offset = main_deck_image.height + line_height + padding

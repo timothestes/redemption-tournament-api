@@ -178,12 +178,13 @@ def draw_count(
 
 def make_pdf(
     deck_type: str,
-    deck_data,
+    deck_data: dict,
     filename: str,
     name: str,
     event: str,
     show_alignment: bool = False,
     sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
+    m_count_value: float = None,
 ):
     """
     Generate a deck check sheet overlay with card listings, section counts,
@@ -198,6 +199,7 @@ def make_pdf(
         show_alignment: Whether to show alignment colors and counts
         sort_by: Single field or list of fields to sort by.
                 Available fields: 'alignment', 'brigade', 'type', 'name'
+        m_count_value: The calculated M count value to display (default: None)
     """
     if show_alignment:
         color_alignment = True
@@ -481,6 +483,20 @@ def make_pdf(
         f"{total_main}",
     )
 
+    # Display M count above alignment area if provided
+    if m_count_value is not None:
+        box_width = 50
+        box_height = 30
+        right_margin = 85
+        top_margin = 14
+        c.setFont("Helvetica", 12)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(
+            width_points - right_margin - box_width + 5,
+            height_points - top_margin - box_height + 10,
+            f"M Count: {m_count_value}",
+        )
+
     # Draw alignment counts only if show_alignment is True
     if show_alignment:
         # Draw good count in green
@@ -588,5 +604,6 @@ if __name__ == "__main__":
         "Player Name",
         "Event Name",
         True,
+        m_count_value=3.14,  # Example M count value
     )
     print("PDF generated successfully.")

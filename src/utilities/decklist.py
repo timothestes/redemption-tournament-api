@@ -1,4 +1,5 @@
 import json
+import random
 import xml.etree.ElementTree as ET
 
 from src.utilities.brigades import normalize_brigade_field
@@ -191,3 +192,52 @@ class Decklist:
             "reserve": self.mapped_reserve_list,
             "reserve_size": self._get_size_of(self.mapped_reserve_list),
         }
+
+    def calculate_m_count(self) -> float:
+        """
+        Calculate the M count of the main deck.
+
+        The M count represents the expected number of unique brigades when randomly
+        drawing 8 non-lost soul cards from the deck.
+
+        For example, if you draw 8 cards with brigades [Orange], [Purple], [Orange, Crimson],
+        [Teal], [Orange], [Purple], [Orange], [Teal], the M count would be 4
+        (Orange, Purple, Teal, Crimson).
+
+        Returns:
+            float: The expected number of unique brigades in a random 8-card draw.
+                   Returns 0.0 if there are no non-lost soul cards in the deck.
+        """
+
+        # Get all non-lost soul cards with their brigades
+        non_lost_soul_cards = []
+        for card_name, card_data in self.mapped_main_deck_list.items():
+            if card_data.get("type", "").lower() != "lost soul":
+                quantity = card_data.get("quantity", 1)
+                brigades = card_data.get("brigade", [])
+                for _ in range(quantity):
+                    non_lost_soul_cards.append(brigades)
+
+        # If we have no non-lost soul cards, return 0
+        if not non_lost_soul_cards:
+            return 0.0
+
+        # If we have fewer than 8 cards, use all available cards
+        sample_size = min(8, len(non_lost_soul_cards))
+
+        # Monte Carlo simulation to calculate expected unique brigades
+        num_simulations = 10_000
+        total_unique_brigades = 0
+
+        for _ in range(num_simulations):
+            # Randomly sample cards
+            sampled_cards = random.sample(non_lost_soul_cards, sample_size)
+
+            # Count unique brigades in this sample
+            unique_brigades = set()
+            for card_brigades in sampled_cards:
+                unique_brigades.update(card_brigades)
+
+            total_unique_brigades += len(unique_brigades)
+
+        return round(total_unique_brigades / num_simulations, 2)
