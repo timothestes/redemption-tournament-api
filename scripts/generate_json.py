@@ -38,6 +38,8 @@ def convert_to_jsonl() -> None:
                     card_data = {}
 
                     for key, value in row.items():
+                        if not key:
+                            continue
                         # Convert keys to lowercase and strip whitespace from values
                         clean_key = key.lower().strip()
                         clean_value = value.strip() if value else ""
@@ -55,9 +57,6 @@ def convert_to_jsonl() -> None:
 
     except FileNotFoundError:
         print(f"Error: Could not find input file at {input_path}")
-        return
-    except Exception as e:
-        print(f"Error processing file: {e}")
         return
 
     print(f"Successfully converted {cards_processed} cards to JSONL format.")
