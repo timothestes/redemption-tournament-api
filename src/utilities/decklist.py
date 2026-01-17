@@ -275,12 +275,21 @@ class Decklist:
         total_daniel_cards = 0
 
         for _ in range(num_simulations):
-            # Shuffle the deck and take the top 9 cards
+            # Shuffle the deck
             shuffled_deck = random.sample(all_cards, len(all_cards))
-            top_9_cards = shuffled_deck[:9]
 
-            # Count how many cards have Daniel references
-            daniel_count = sum(1 for ref in top_9_cards if ref and "Daniel" in ref)
+            # Check first 3 cards for any Daniel references
+            first_3 = shuffled_deck[0:3]
+            first_3_daniel = sum(1 for ref in first_3 if ref and "Daniel" in ref)
+
+            # If no Daniel cards in first 3, AoD count is 0 for this simulation
+            if first_3_daniel == 0:
+                daniel_count = 0
+            else:
+                # If at least 1 Daniel in first 3, count all Daniel cards in top 9
+                top_9_cards = shuffled_deck[0:9]
+                daniel_count = sum(1 for ref in top_9_cards if ref and "Daniel" in ref)
+
             total_daniel_cards += daniel_count
 
         return round(total_daniel_cards / num_simulations, 2)
