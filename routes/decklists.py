@@ -40,6 +40,7 @@ def generate_decklist():
             data["event"],
             show_alignment=data.get("show_alignment", False),
             m_count=data.get("m_count", False),
+            aod_count=data.get("aod_count", False),
         )
 
         # Upload to Supabase

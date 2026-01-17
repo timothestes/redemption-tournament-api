@@ -185,6 +185,7 @@ def make_pdf(
     show_alignment: bool = False,
     sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     m_count_value: float = None,
+    aod_count_value: float = None,
 ):
     """
     Generate a deck check sheet overlay with card listings, section counts,
@@ -200,6 +201,7 @@ def make_pdf(
         sort_by: Single field or list of fields to sort by.
                 Available fields: 'alignment', 'brigade', 'type', 'name'
         m_count_value: The calculated M count value to display (default: None)
+        aod_count_value: The calculated AoD count value to display (default: None)
     """
     if show_alignment:
         color_alignment = True
@@ -495,6 +497,20 @@ def make_pdf(
             width_points - right_margin - box_width + 5,
             height_points - top_margin - box_height + 10,
             f"M Count: {m_count_value}",
+        )
+
+    # Display AoD count above M count if provided
+    if aod_count_value is not None:
+        box_width = 50
+        box_height = 30
+        right_margin = 85
+        top_margin = 4  # Higher up, above M count
+        c.setFont("Helvetica", 12)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(
+            width_points - right_margin - box_width + 5,
+            height_points - top_margin - box_height + 10,
+            f"AoD Count: {aod_count_value}",
         )
 
     # Draw alignment counts only if show_alignment is True

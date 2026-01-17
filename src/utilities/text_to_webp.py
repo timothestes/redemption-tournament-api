@@ -82,6 +82,7 @@ def make_webp(
     n_card_columns: int = 10,
     sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     m_count_value: float = None,
+    aod_count_value: float = None,
 ):
     """
     Create a WebP image from deck data.
@@ -94,6 +95,7 @@ def make_webp(
         sort_by: Single field or list of fields to sort by.
                 Available fields: 'alignment', 'brigade', 'type', 'name' (default: "type")
         m_count_value (float): The calculated M count value to display (default: None)
+        aod_count_value (float): The calculated AoD count value to display (default: None)
 
     Returns:
         str: Path to the generated WebP file
@@ -131,6 +133,7 @@ def make_webp(
         filename,
         output_dir,
         m_count_value,
+        aod_count_value,
     )
 
     # Clean up individual images
@@ -250,6 +253,7 @@ def _combine_deck_images(
     output_filename: str,
     output_dir: str,
     m_count_value: float = None,
+    aod_count_value: float = None,
 ) -> str:
     """
     Combine the main deck and reserve deck images into a single image,
@@ -272,8 +276,10 @@ def _combine_deck_images(
     # Set padding between main deck and reserve deck
     padding = 50
 
-    # If no reserve deck but M count exists, still add the separator bar
-    if not reserve_deck_image and m_count_value is not None:
+    # If no reserve deck but M count or AoD count exists, still add the separator bar
+    if not reserve_deck_image and (
+        m_count_value is not None or aod_count_value is not None
+    ):
         # Use a larger line height for the separator when no reserve deck
         enhanced_line_height = line_height * 2  # Double the line height
 
@@ -300,8 +306,13 @@ def _combine_deck_images(
             width=enhanced_line_height,
         )
 
-        # Add M count text overlay on the separator line
-        text = f"M Count: {m_count_value}"
+        # Add M count and/or AoD count text overlay on the separator line
+        count_parts = []
+        if m_count_value is not None:
+            count_parts.append(f"M Count: {m_count_value}")
+        if aod_count_value is not None:
+            count_parts.append(f"AoD Count: {aod_count_value}")
+        text = "  |  ".join(count_parts)
         text_color = (255, 255, 255)  # White text
 
         try:
@@ -369,9 +380,14 @@ def _combine_deck_images(
         width=line_height,
     )
 
-    # Add M count text overlay on the separator line if provided
-    if m_count_value is not None:
-        text = f"M Count: {m_count_value}"
+    # Add M count and/or AoD count text overlay on the separator line if provided
+    if m_count_value is not None or aod_count_value is not None:
+        count_parts = []
+        if m_count_value is not None:
+            count_parts.append(f"M Count: {m_count_value}")
+        if aod_count_value is not None:
+            count_parts.append(f"AoD Count: {aod_count_value}")
+        text = "  |  ".join(count_parts)
         text_color = (255, 255, 255)  # White text
 
         try:

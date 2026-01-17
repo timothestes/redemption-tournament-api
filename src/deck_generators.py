@@ -38,6 +38,7 @@ def generate_webp(
     deck_type: str,
     n_card_columns: int = 10,
     m_count: bool = False,
+    aod_count: bool = False,
 ):
     """
     Generate a WebP image from deck data.
@@ -47,6 +48,7 @@ def generate_webp(
         deck_type: Type of deck being processed
         n_card_columns: Number of card columns in the image
         m_count: Whether to include m_count in the image
+        aod_count: Whether to include aod_count in the image
 
     Returns:
         tuple: (filename_with_extension, file_path)
@@ -61,6 +63,11 @@ def generate_webp(
     if m_count:
         m_count_value = decklist_object.calculate_m_count()
 
+    # Calculate AoD count if requested
+    aod_count_value = None
+    if aod_count:
+        aod_count_value = decklist_object.calculate_aod_count()
+
     # Call make_webp and get the actual file path
     webp_file_path = make_webp(
         deck_type,
@@ -68,6 +75,7 @@ def generate_webp(
         filename=unique_filename,
         n_card_columns=n_card_columns,
         m_count_value=m_count_value,
+        aod_count_value=aod_count_value,
     )
 
     if not webp_file_path or not os.path.exists(webp_file_path):
@@ -87,6 +95,7 @@ def generate_pdf(
     event: str,
     show_alignment: bool,
     m_count: bool = False,
+    aod_count: bool = False,
 ):
     """
     Generate a PDF from deck data.
@@ -98,6 +107,7 @@ def generate_pdf(
         event: Event name for the PDF
         show_alignment: Whether to show alignment in the PDF
         m_count: Whether to include m_count in the PDF
+        aod_count: Whether to include aod_count in the PDF
 
     Returns:
         tuple: (filename, file_path)
@@ -112,6 +122,11 @@ def generate_pdf(
     if m_count:
         m_count_value = decklist_object.calculate_m_count()
 
+    # Calculate AoD count if requested
+    aod_count_value = None
+    if aod_count:
+        aod_count_value = decklist_object.calculate_aod_count()
+
     make_pdf(
         deck_type,
         processed_deck_data,
@@ -120,6 +135,7 @@ def generate_pdf(
         event=event,
         show_alignment=show_alignment,
         m_count_value=m_count_value,
+        aod_count_value=aod_count_value,
     )
 
     if str_to_bool(os.getenv("DEBUG")):

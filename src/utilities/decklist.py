@@ -241,3 +241,46 @@ class Decklist:
             total_unique_brigades += len(unique_brigades)
 
         return round(total_unique_brigades / num_simulations, 2)
+
+    def calculate_aod_count(self) -> float:
+        """
+        Calculate the AoD count of the main deck.
+
+        The AoD count represents the average number of Daniel reference cards
+        when randomly drawing the top 9 cards from the deck.
+
+        Returns:
+            float: The average number of Daniel reference cards in the top 9 cards.
+                   Returns 0.0 if the deck has fewer than 9 cards.
+        """
+        # Build a list of all cards in the main deck with their references
+        # Exclude "The Ancient of Days" card itself from the simulation
+        all_cards = []
+        for card_name, card_data in self.mapped_main_deck_list.items():
+            # Skip The Ancient of Days card
+            if card_name == "The Ancient of Days":
+                continue
+
+            quantity = card_data.get("quantity", 1)
+            reference = card_data.get("reference", "")
+            for _ in range(quantity):
+                all_cards.append(reference)
+
+        # If we have fewer than 9 cards, return 0
+        if len(all_cards) < 9:
+            return 0.0
+
+        # Monte Carlo simulation to calculate average Daniel reference cards in top 9
+        num_simulations = 10_000
+        total_daniel_cards = 0
+
+        for _ in range(num_simulations):
+            # Shuffle the deck and take the top 9 cards
+            shuffled_deck = random.sample(all_cards, len(all_cards))
+            top_9_cards = shuffled_deck[:9]
+
+            # Count how many cards have Daniel references
+            daniel_count = sum(1 for ref in top_9_cards if ref and "Daniel" in ref)
+            total_daniel_cards += daniel_count
+
+        return round(total_daniel_cards / num_simulations, 2)

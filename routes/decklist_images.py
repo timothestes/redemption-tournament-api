@@ -36,6 +36,7 @@ def generate_decklist():
             data["decklist_type"],
             n_card_columns=data.get("n_card_columns", 10),
             m_count=data.get("m_count", False),
+            aod_count=data.get("aod_count", False),
         )
 
         # Upload to Supabase
