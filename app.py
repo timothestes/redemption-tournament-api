@@ -14,6 +14,7 @@ ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5000",
     "https://redemption-tournament-tracker.vercel.app",
+    "https://redemptionccg.app",
 ]
 
 # Configure CORS with more specific settings
