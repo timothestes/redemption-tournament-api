@@ -6,7 +6,7 @@ SOURCE_IMAGE_DIRECTORY = (
     "/Applications/LackeyCCGMac/plugins/Redemption/sets/setimages/general"
 )
 TARGET_IMAGE_DIRECTORY = "assets/cardimages"
-CARDDATA_FILE = "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"
+CARDDATA_FILE = "/Applications/LackeyCCGMac/plugins/Redemption/sets/carddata.txt"
 
 
 def load_carddata_filenames() -> set:
