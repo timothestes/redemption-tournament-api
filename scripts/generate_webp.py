@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 
 SOURCE_IMAGE_DIRECTORY = (
-    "/Applications/LackeyCCG/plugins/Redemption/sets/setimages/general"
+    "/Applications/LackeyCCGMac/plugins/Redemption/sets/setimages/general"
 )
 TARGET_IMAGE_DIRECTORY = "assets/cardimages"
 CARDDATA_FILE = "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"
