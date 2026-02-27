@@ -17,6 +17,45 @@ LOST_SOUL_PREFIX_PATTERN = re.compile(r"^Lost Soul\s+")
 BRACKET_PATTERN = re.compile(r"\[([^\]]+)\]")
 HYPHEN_PATTERN = re.compile(r"\s*-\s*[^]]+")
 
+NON_MISC_TYPES = [
+    "Dominant",
+    "Hero",
+    "GE",
+    "Lost Soul",
+    "Evil Character",
+    "EE",
+    "Artifact",
+    "Fortress",
+    "Site",
+    "Curse",
+    "Covenant",
+    "City",
+]
+
+T1_SECTION_LIMITS = {
+    "Dominant": 21,
+    "Hero": 20,
+    "GE": 13,
+    "Lost Soul": 21,
+    "Evil Character": 20,
+    "EE": 13,
+    "Artifact": 16,  # Combined: Artifact, Covenant, Curse
+    "Fortress": 13,  # Combined: Fortress, Site, City
+    "Misc": 10,
+}
+
+T2_SECTION_LIMITS = {
+    "Dominant": 23,
+    "Hero": 20,
+    "GE": 11,
+    "Lost Soul": 23,
+    "Evil Character": 20,
+    "EE": 11,
+    "Artifact": 16,  # Combined: Artifact, Covenant, Curse
+    "Fortress": 11,  # Combined: Fortress, Site, City
+    "Misc": 10,
+}
+
 
 def clean_card_name(card_name, card_data):
     """
@@ -50,6 +89,18 @@ def clean_card_name(card_name, card_data):
     return card_name
 
 
+def filter_section(deck, card_types):
+    """Filter deck by card type specification, handling 'misc', 'all', and list cases."""
+    if card_types == "misc":
+        return {k: v for k, v in deck.items() if v.get("type") not in NON_MISC_TYPES}
+    elif card_types == "all":
+        return dict(deck)
+    elif isinstance(card_types, str):
+        return {k: v for k, v in deck.items() if v.get("type") == card_types}
+    else:
+        return {k: v for k, v in deck.items() if v.get("type") in card_types}
+
+
 def place_section(
     c,
     section_data,
@@ -59,14 +110,21 @@ def place_section(
     add_quantity=True,
     color_alignment=False,
     sort_by: Union[str, List[str]] = "name",
+    max_items: int = None,
 ):
     """
     Place sorted items from section_data at (x, y) on the canvas.
     If add_quantity is False, list each card multiple times based on quantity.
     If color_alignment is True, cards are colored based on their alignment.
+    If max_items is set, only draw that many unique cards; returns remaining as overflow dict.
     """
-    # Use our flexible sorting utility
     sorted_items = sort_cards(section_data, sort_by)
+
+    if max_items is not None and len(sorted_items) > max_items:
+        overflow_items = dict(sorted_items[max_items:])
+        sorted_items = sorted_items[:max_items]
+    else:
+        overflow_items = {}
 
     for card_name, card_data in sorted_items:
         display_name = clean_card_name(card_name, card_data)
@@ -98,6 +156,8 @@ def place_section(
         if color_alignment:
             c.setFillColorRGB(0, 0, 0)
 
+    return overflow_items
+
 
 def place_section_by_type(
     c,
@@ -109,38 +169,25 @@ def place_section_by_type(
     add_quantity=True,
     color_alignment=False,
     sort_by: Union[str, List[str]] = "name",
+    max_items: int = None,
 ):
     """
     Filter main_deck by card_types and place the section.
+    Returns a dict of overflow items (empty if no overflow).
     """
     y = height_points - y
     line_spacing = 16
-    if isinstance(card_types, str):
-        filtered = {k: v for k, v in deck.items() if v.get("type") == card_types}
-    else:
-        filtered = {k: v for k, v in deck.items() if v.get("type") in card_types}
-    if card_types == "misc":
-        filtered = {}
-        for key, value in deck.items():
-            if value.get("type") not in [
-                "Dominant",
-                "Hero",
-                "GE",
-                "Lost Soul",
-                "Evil Character",
-                "EE",
-                "Artifact",
-                "Fortress",
-                "Site",
-                "Curse",
-                "Covenant",
-                "City",
-            ]:
-                filtered[key] = value
-    elif card_types == "all":
-        filtered = deck
-    place_section(
-        c, filtered, x, y, line_spacing, add_quantity, color_alignment, sort_by
+    filtered = filter_section(deck, card_types)
+    return place_section(
+        c,
+        filtered,
+        x,
+        y,
+        line_spacing,
+        add_quantity,
+        color_alignment,
+        sort_by,
+        max_items,
     )
 
 
@@ -174,6 +221,94 @@ def draw_count(
 
     c.setFont(font, font_size)
     c.drawString(x, y, str(total))
+
+
+def draw_overflow_page(
+    c, overflow_sections, width_points, height_points, name="", event=""
+):
+    """
+    Draw a plain overflow page onto the canvas.
+    Caller must call c.showPage() before this to start a fresh page,
+    and c.showPage() after to finalize it.
+    overflow_sections: list of (label, items_dict) tuples (only non-empty sections).
+    """
+    margin_x = 50
+    margin_y = 50
+    col_gap = 20
+    col_width = (width_points - 2 * margin_x - col_gap) / 2
+    line_spacing = 14
+    section_gap = 10
+    header_h = 18
+
+    header_text = "OVERFLOW"
+    if name:
+        header_text += f"  —  {name}"
+    if event:
+        header_text += f"  |  {event}"
+
+    def draw_page_header():
+        c.setFont("Helvetica-Bold", 14)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(margin_x, height_points - margin_y, header_text)
+        c.line(
+            margin_x,
+            height_points - margin_y - 5,
+            width_points - margin_x,
+            height_points - margin_y - 5,
+        )
+
+    draw_page_header()
+    content_top = height_points - margin_y - 26
+    bottom_limit = margin_y
+
+    col = 0
+    x = margin_x
+    y = content_top
+
+    def advance():
+        nonlocal col, x, y
+        if col == 0:
+            col = 1
+            x = margin_x + col_width + col_gap
+            y = content_top
+        else:
+            c.showPage()
+            draw_page_header()
+            col = 0
+            x = margin_x
+            y = content_top
+
+    for label, items in overflow_sections:
+        if not items:
+            continue
+
+        # Ensure room for at least the section header + one card line
+        if y - header_h - line_spacing < bottom_limit:
+            advance()
+
+        # Section header
+        c.setFont("Helvetica-Bold", 10)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(x, y, label.upper())
+        y -= header_h
+
+        # Cards
+        c.setFont("Helvetica", 9)
+        for card_name, card_data in items.items():
+            if y - line_spacing < bottom_limit:
+                advance()
+                c.setFont("Helvetica-Bold", 10)
+                c.setFillColorRGB(0, 0, 0)
+                c.drawString(x, y, label.upper() + " (cont.)")
+                y -= header_h
+                c.setFont("Helvetica", 9)
+
+            display_name = clean_card_name(card_name, card_data)
+            qty = card_data.get("quantity", 1)
+            c.drawString(x + 8, y, f"{qty}x {display_name}")
+            y -= line_spacing
+
+        y -= section_gap
 
 
 def make_pdf(
@@ -287,97 +422,37 @@ def make_pdf(
             },
         }
 
-    # Draw card listings with color_alignment option
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "Dominant",
-        x=section_mappings["lists"]["Dominant"]["x"],
-        y=section_mappings["lists"]["Dominant"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "Hero",
-        x=section_mappings["lists"]["Hero"]["x"],
-        y=section_mappings["lists"]["Hero"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "GE",
-        x=section_mappings["lists"]["GE"]["x"],
-        y=section_mappings["lists"]["GE"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "Lost Soul",
-        x=section_mappings["lists"]["Lost Soul"]["x"],
-        y=section_mappings["lists"]["Lost Soul"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "Evil Character",
-        x=section_mappings["lists"]["Evil Character"]["x"],
-        y=section_mappings["lists"]["Evil Character"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "EE",
-        x=section_mappings["lists"]["EE"]["x"],
-        y=section_mappings["lists"]["EE"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        ["Artifact", "Covenant", "Curse"],
-        x=section_mappings["lists"]["Artifact"]["x"],
-        y=section_mappings["lists"]["Artifact"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        ["Fortress", "Site", "City"],
-        x=section_mappings["lists"]["Fortress"]["x"],
-        y=section_mappings["lists"]["Fortress"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
-    place_section_by_type(
-        c,
-        main_deck,
-        height_points,
-        "misc",
-        x=section_mappings["lists"]["Misc"]["x"],
-        y=section_mappings["lists"]["Misc"]["y"],
-        color_alignment=color_alignment,
-        sort_by=sort_by,
-    )
+    # Draw card listings with color_alignment option.
+    # Enforce per-section limits on main deck only; reserve has no limit.
+    limits = T1_SECTION_LIMITS if deck_type == "type_1" else T2_SECTION_LIMITS
+    overflow_sections = []
+
+    def _draw_section(label, card_types, section_key, **kwargs):
+        overflow = place_section_by_type(
+            c,
+            main_deck,
+            height_points,
+            card_types,
+            x=section_mappings["lists"][section_key]["x"],
+            y=section_mappings["lists"][section_key]["y"],
+            color_alignment=color_alignment,
+            sort_by=sort_by,
+            max_items=limits.get(label),
+            **kwargs,
+        )
+        if overflow:
+            overflow_sections.append((label, overflow))
+
+    _draw_section("Dominant", "Dominant", "Dominant")
+    _draw_section("Hero", "Hero", "Hero")
+    _draw_section("GE", "GE", "GE")
+    _draw_section("Lost Soul", "Lost Soul", "Lost Soul")
+    _draw_section("Evil Character", "Evil Character", "Evil Character")
+    _draw_section("EE", "EE", "EE")
+    _draw_section("Artifact", ["Artifact", "Covenant", "Curse"], "Artifact")
+    _draw_section("Fortress", ["Fortress", "Site", "City"], "Fortress")
+    _draw_section("Misc", "misc", "Misc")
+
     place_section_by_type(
         c,
         reserve,
@@ -594,6 +669,13 @@ def make_pdf(
     )
 
     c.showPage()
+
+    if overflow_sections:
+        draw_overflow_page(
+            c, overflow_sections, width_points, height_points, name, event
+        )
+        c.showPage()
+
     c.save()
 
     overlay_pdf = PdfReader(temp_overlay)
@@ -601,6 +683,9 @@ def make_pdf(
         page.merge_page(overlay_pdf.pages[0])
     writer = PdfWriter()
     writer.add_page(page)
+    # Append any overflow pages (they don't need template merging)
+    for i in range(1, len(overlay_pdf.pages)):
+        writer.add_page(overlay_pdf.pages[i])
     with open(output_path, "wb") as f:
         writer.write(f)
 
