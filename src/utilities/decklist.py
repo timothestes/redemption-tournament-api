@@ -38,9 +38,9 @@ class Decklist:
                     "Please load a deck that contains 20 or less cards in the reserve."
                 )
             return
-        if self.deck_size < 50:
+        if self.deck_size < 40:
             raise AssertionError(
-                "Please load a deck that contains at least 50 cards in the main deck."
+                "Please load a deck that contains at least 40 cards in the main deck."
             )
         if self.deck_size > 252 and deck_type == "type_2":
             raise AssertionError(
