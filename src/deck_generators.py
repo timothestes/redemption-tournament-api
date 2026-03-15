@@ -93,7 +93,7 @@ def generate_pdf(
     deck_type: str,
     name: str = "",
     event: str = "",
-    show_alignment: bool,
+    show_alignment: bool = False,
     m_count: bool = False,
     aod_count: bool = False,
 ):
