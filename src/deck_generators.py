@@ -91,8 +91,8 @@ def generate_webp(
 def generate_pdf(
     deck_data: str,
     deck_type: str,
-    name: str,
-    event: str,
+    name: str = "",
+    event: str = "",
     show_alignment: bool,
     m_count: bool = False,
     aod_count: bool = False,

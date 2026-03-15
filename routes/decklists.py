@@ -36,8 +36,8 @@ def generate_decklist():
         filename, file_path = generate_pdf(
             data["decklist"],
             data["decklist_type"],
-            data["name"],
-            data["event"],
+            name=data.get("name", ""),
+            event=data.get("event", ""),
             show_alignment=data.get("show_alignment", False),
             m_count=data.get("m_count", False),
             aod_count=data.get("aod_count", False),
