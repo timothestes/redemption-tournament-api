@@ -342,7 +342,7 @@ def make_pdf(
         color_alignment = True
     else:
         color_alignment = False
-    if deck_type == "type_1":
+    if deck_type in ("type_1", "paragon"):
         template_path = "assets/pdfs/t1_deck_check.pdf"
     elif deck_type == "type_2":
         template_path = "assets/pdfs/t2_deck_check.pdf"
@@ -367,7 +367,7 @@ def make_pdf(
     main_deck = deck_data.get("main_deck", {})
     reserve = deck_data.get("reserve", {})
 
-    if deck_type == "type_1":
+    if deck_type in ("type_1", "paragon"):
         section_mappings = {
             "lists": {
                 "Dominant": {"x": 57, "y": 180},
@@ -424,7 +424,7 @@ def make_pdf(
 
     # Draw card listings with color_alignment option.
     # Enforce per-section limits on main deck only; reserve has no limit.
-    limits = T1_SECTION_LIMITS if deck_type == "type_1" else T2_SECTION_LIMITS
+    limits = T1_SECTION_LIMITS if deck_type in ("type_1", "paragon") else T2_SECTION_LIMITS
     overflow_sections = []
 
     def _draw_section(label, card_types, section_key, **kwargs):

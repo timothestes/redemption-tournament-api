@@ -46,11 +46,11 @@ class Decklist:
             raise AssertionError(
                 "Please load a deck that contains 252 or less cards in the main deck for type 2"
             )
-        elif self.deck_size > 154 and deck_type == "type_1":
+        elif self.deck_size > 154 and deck_type in ("type_1", "paragon"):
             raise AssertionError(
                 "Please load a deck that contains 154 or less cards in the main deck for type 1"
             )
-        if self.reserve_size > 10 and deck_type == "type_1":
+        if self.reserve_size > 10 and deck_type in ("type_1", "paragon"):
             raise AssertionError(
                 "Please load a deck that contains 10 or less cards in the reserve for type 1"
             )
