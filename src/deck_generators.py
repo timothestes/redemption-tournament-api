@@ -39,6 +39,7 @@ def generate_webp(
     n_card_columns: int = 10,
     m_count: bool = False,
     aod_count: bool = False,
+    is_legal: bool = None,
 ):
     """
     Generate a WebP image from deck data.
@@ -76,6 +77,7 @@ def generate_webp(
         n_card_columns=n_card_columns,
         m_count_value=m_count_value,
         aod_count_value=aod_count_value,
+        is_legal=is_legal,
     )
 
     if not webp_file_path or not os.path.exists(webp_file_path):
@@ -96,6 +98,7 @@ def generate_pdf(
     show_alignment: bool = False,
     m_count: bool = False,
     aod_count: bool = False,
+    is_legal: bool = None,
 ):
     """
     Generate a PDF from deck data.
@@ -136,6 +139,7 @@ def generate_pdf(
         show_alignment=show_alignment,
         m_count_value=m_count_value,
         aod_count_value=aod_count_value,
+        is_legal=is_legal,
     )
 
     if str_to_bool(os.getenv("DEBUG")):

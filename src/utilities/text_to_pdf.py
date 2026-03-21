@@ -7,6 +7,7 @@ from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
 from src.utilities.config import str_to_bool
+from src.utilities.seal import generate_seal
 from src.utilities.sort import sort_cards
 
 load_dotenv()
@@ -321,6 +322,7 @@ def make_pdf(
     sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     m_count_value: float = None,
     aod_count_value: float = None,
+    is_legal: bool = None,
 ):
     """
     Generate a deck check sheet overlay with card listings, section counts,
@@ -667,6 +669,27 @@ def make_pdf(
         height_points - top_margin - box_height + 10,
         event,
     )
+
+    # Draw legality seal near center-top of the page
+    if is_legal is not None:
+        deck_format = "Type 2" if deck_type == "type_2" else "Type 1"
+        seal_img = generate_seal(
+            valid=is_legal,
+            deck_format=deck_format,
+        )
+        seal_temp_path = os.path.join(deck_directory, f"seal_{filename}.png")
+        seal_img.save(seal_temp_path, format="PNG")
+        seal_size = 65
+        c.drawImage(
+            seal_temp_path,
+            (width_points - seal_size) / 2 - 40,
+            height_points - seal_size - 10,
+            width=seal_size,
+            height=seal_size,
+            mask="auto",
+        )
+        if os.path.exists(seal_temp_path):
+            os.remove(seal_temp_path)
 
     c.showPage()
 

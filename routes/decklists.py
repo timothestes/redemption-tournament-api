@@ -30,8 +30,6 @@ def generate_decklist():
         if "decklist" not in data or "decklist_type" not in data:
             return jsonify({"error": "invalid request"}), 400
 
-        # with open("decklist.txt", "w") as f:
-        #     f.write(data["decklist"])
         # Generate PDF
         filename, file_path = generate_pdf(
             data["decklist"],
@@ -41,6 +39,7 @@ def generate_decklist():
             show_alignment=data.get("show_alignment", False),
             m_count=data.get("m_count", False),
             aod_count=data.get("aod_count", False),
+            is_legal=data.get("is_legal"),
         )
 
         # Upload to Supabase

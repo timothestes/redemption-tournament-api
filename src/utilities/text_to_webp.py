@@ -8,6 +8,7 @@ import PIL.ImageDraw as ImageDraw
 from PIL import ImageFont
 
 from src.utilities.config import str_to_bool
+from src.utilities.seal import generate_seal
 from src.utilities.sort import sort_cards
 from src.utilities.vars import CARD_DATA_JSON_FILE
 
@@ -83,6 +84,7 @@ def make_webp(
     sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     m_count_value: float = None,
     aod_count_value: float = None,
+    is_legal: bool = None,
 ):
     """
     Create a WebP image from deck data.
@@ -96,6 +98,7 @@ def make_webp(
                 Available fields: 'alignment', 'brigade', 'type', 'name' (default: "type")
         m_count_value (float): The calculated M count value to display (default: None)
         aod_count_value (float): The calculated AoD count value to display (default: None)
+        is_legal (bool): True = legal, False = illegal, None = skip seal
 
     Returns:
         str: Path to the generated WebP file
@@ -134,6 +137,8 @@ def make_webp(
         output_dir,
         m_count_value,
         aod_count_value,
+        is_legal,
+        deck_type,
     )
 
     # Clean up individual images
@@ -247,6 +252,25 @@ def _generate_deck_image(
     return output_image_path
 
 
+def _apply_legality_seal(image: Image.Image, is_legal: bool, deck_type: str) -> Image.Image:
+    """Overlay the legality seal onto the top-left corner of an image."""
+    deck_format = "Type 2" if deck_type == "type_2" else "Type 1"
+    seal_size = min(image.width, image.height) // 4
+    seal_size = max(seal_size, 150)
+    seal_img = generate_seal(
+        valid=is_legal,
+        deck_format=deck_format,
+        size=seal_size,
+    )
+    # Convert to RGBA if needed so we can paste with transparency
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    margin = 20
+    image.paste(seal_img, (margin, margin), seal_img)
+    # Convert back to RGB for WebP saving
+    return image.convert("RGB")
+
+
 def _combine_deck_images(
     main_deck_image_path: str,
     reserve_deck_image_path: str,
@@ -254,6 +278,8 @@ def _combine_deck_images(
     output_dir: str,
     m_count_value: float = None,
     aod_count_value: float = None,
+    is_legal: bool = None,
+    deck_type: str = "type_1",
 ) -> str:
     """
     Combine the main deck and reserve deck images into a single image,
@@ -335,6 +361,9 @@ def _combine_deck_images(
 
         draw.text((text_x, text_y), text, fill=text_color, font=font)
 
+        if is_legal is not None:
+            combined_image = _apply_legality_seal(combined_image, is_legal, deck_type)
+
         # Save the combined image using WebP optimization
         combined_image_path = os.path.join(output_dir, f"{output_filename}.webp")
         combined_image.save(
@@ -349,6 +378,9 @@ def _combine_deck_images(
 
     # If no reserve deck and no M count, just return the main deck image
     if not reserve_deck_image:
+        if is_legal is not None:
+            main_deck_image = _apply_legality_seal(main_deck_image, is_legal, deck_type)
+
         combined_image_path = os.path.join(output_dir, f"{output_filename}.webp")
         main_deck_image.save(
             combined_image_path, format="WEBP", quality=80, optimize=True
@@ -410,6 +442,9 @@ def _combine_deck_images(
     # Paste the reserve deck image below the line, with added padding
     reserve_y_offset = main_deck_image.height + line_height + padding
     combined_image.paste(reserve_deck_image, (0, reserve_y_offset))
+
+    if is_legal is not None:
+        combined_image = _apply_legality_seal(combined_image, is_legal, deck_type)
 
     # Save the combined image using WebP optimization
     combined_image_path = os.path.join(output_dir, f"{output_filename}.webp")
