@@ -255,8 +255,8 @@ def _generate_deck_image(
 def _apply_legality_seal(image: Image.Image, is_legal: bool, deck_type: str) -> Image.Image:
     """Overlay the legality seal onto the top-left corner of an image."""
     deck_format = "Type 2" if deck_type == "type_2" else "Type 1"
-    seal_size = min(image.width, image.height) // 4
-    seal_size = max(seal_size, 150)
+    seal_size = min(image.width, image.height) // 12
+    seal_size = max(seal_size, 80)
     seal_img = generate_seal(
         valid=is_legal,
         deck_format=deck_format,
