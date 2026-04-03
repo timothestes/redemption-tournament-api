@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python -c \":*)",
       "Bash(python3 -m scripts.generate_json)",
-      "Bash(python3 -m scripts.generate_webp)"
+      "Bash(python3 -m scripts.generate_webp)",
+      "Read(//Applications/LackeyCCGMac/plugins/Redemption/sets/**)"
     ]
   }
 }
