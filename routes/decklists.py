@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from supabase import Client, create_client
 
-from src.deck_generators import generate_pdf
+from src.deck_generators import calculate_aod_count, generate_pdf
 
 load_dotenv()
 
@@ -79,3 +79,43 @@ def generate_decklist():
     finally:
         if file_path and os.path.exists(file_path):
             os.remove(file_path)
+
+
+@decklists_bp.route("/aod-count", methods=["POST"])
+def aod_count():
+    """Take a deck payload and return just the calculated AoD count."""
+    try:
+        if not request.is_json:
+            return jsonify({"error": "invalid request"}), 400
+
+        data = request.get_json()
+        if "decklist" not in data or "decklist_type" not in data:
+            return jsonify({"error": "invalid request"}), 400
+
+        aod_count_value = calculate_aod_count(
+            data["decklist"],
+            data["decklist_type"],
+        )
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "aod count calculated successfully",
+                    "data": {
+                        "aod_count": aod_count_value,
+                        "createdAt": datetime.datetime.now().isoformat(),
+                    },
+                }
+            ),
+            200,
+        )
+
+    except AssertionError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return (
+            jsonify({"status": "error", "message": "something unexpected happened"}),
+            500,
+        )

@@ -33,6 +33,23 @@ def _process_deck_data(deck_data: str, deck_type: str, bypass_assertions: bool =
     return unique_filename, processed_deck_data, decklist_object
 
 
+def calculate_aod_count(deck_data: str, deck_type: str) -> float:
+    """
+    Calculate the AoD (Ancient of Days) count for a deck without generating any files.
+
+    Args:
+        deck_data: Raw deck data string
+        deck_type: Type of deck being processed
+
+    Returns:
+        float: The calculated AoD count for the main deck.
+    """
+    _, _, decklist_object = _process_deck_data(
+        deck_data, deck_type, bypass_assertions=True
+    )
+    return decklist_object.calculate_aod_count()
+
+
 def generate_webp(
     deck_data: str,
     deck_type: str,
