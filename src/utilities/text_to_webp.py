@@ -81,7 +81,7 @@ def make_webp(
     deck_data: dict,
     filename: str,
     n_card_columns: int = 10,
-    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
+    sort_by: Union[str, List[str]] = "default",
     m_count_value: float = None,
     aod_count_value: float = None,
     is_legal: bool = None,
@@ -95,7 +95,8 @@ def make_webp(
         filename (str): Base filename for output
         n_card_columns (int): Number of card columns per row (default: 10)
         sort_by: Single field or list of fields to sort by.
-                Available fields: 'alignment', 'brigade', 'type', 'name' (default: "type")
+                Available fields: 'alignment', 'brigade', 'type', 'name'.
+                "default" (the default) applies the canonical default card sort order.
         m_count_value (float): The calculated M count value to display (default: None)
         aod_count_value (float): The calculated AoD count value to display (default: None)
         is_legal (bool): True = legal, False = illegal, None = skip seal
@@ -153,7 +154,7 @@ def _generate_deck_image(
     output_filename: str,
     cards_per_row: int,
     output_dir: str,
-    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
+    sort_by: Union[str, List[str]] = "default",
 ) -> str:
     """Generate an image for the specified deck (either 'main_deck' or 'reserve')."""
     if cards_per_row == 0:
