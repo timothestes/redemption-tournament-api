@@ -249,8 +249,12 @@ class Decklist:
         The AoD count represents the average number of Daniel reference cards
         when randomly drawing the top 9 cards from the deck.
 
+        Lost Souls never add to the count itself, but a Daniel-reference Lost
+        Soul in the first 3 cards still triggers the chain.
+
         Returns:
-            float: The average number of Daniel reference cards in the top 9 cards.
+            float: The average number of non-Lost Soul Daniel reference cards
+                   in the top 9 cards.
                    Returns 0.0 if the deck has fewer than 9 cards.
         """
         # Build a list of all cards in the main deck with their references
@@ -263,8 +267,9 @@ class Decklist:
 
             quantity = card_data.get("quantity", 1)
             reference = card_data.get("reference", "")
+            is_lost_soul = card_data.get("type", "").lower() == "lost soul"
             for _ in range(quantity):
-                all_cards.append(reference)
+                all_cards.append((reference, is_lost_soul))
 
         # If we have fewer than 9 cards, return 0
         if len(all_cards) < 9:
@@ -279,16 +284,22 @@ class Decklist:
             shuffled_deck = random.sample(all_cards, len(all_cards))
 
             # Check first 3 cards for any Daniel references
+            # (Lost Souls count here — they keep the chain going)
             first_3 = shuffled_deck[0:3]
-            first_3_daniel = sum(1 for ref in first_3 if ref and "Daniel" in ref)
+            first_3_daniel = sum(1 for ref, _ in first_3 if ref and "Daniel" in ref)
 
             # If no Daniel cards in first 3, AoD count is 0 for this simulation
             if first_3_daniel == 0:
                 daniel_count = 0
             else:
-                # If at least 1 Daniel in first 3, count all Daniel cards in top 9
+                # If at least 1 Daniel in first 3, count non-Lost Soul Daniel
+                # cards in top 9
                 top_9_cards = shuffled_deck[0:9]
-                daniel_count = sum(1 for ref in top_9_cards if ref and "Daniel" in ref)
+                daniel_count = sum(
+                    1
+                    for ref, is_lost_soul in top_9_cards
+                    if ref and "Daniel" in ref and not is_lost_soul
+                )
 
             total_daniel_cards += daniel_count
 
