@@ -6,7 +6,11 @@ from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from supabase import Client, create_client
 
-from src.deck_generators import calculate_aod_count, generate_pdf
+from src.deck_generators import (
+    calculate_aod_breakdown,
+    calculate_aod_count,
+    generate_pdf,
+)
 
 load_dotenv()
 
@@ -92,10 +96,20 @@ def aod_count():
         if "decklist" not in data or "decklist_type" not in data:
             return jsonify({"error": "invalid request"}), 400
 
-        aod_count_value = calculate_aod_count(
-            data["decklist"],
-            data["decklist_type"],
-        )
+        # When include_breakdown is set, return the split soul/non-soul counts
+        # and whiff % from a single simulation; otherwise just the AoD count.
+        if data.get("include_breakdown"):
+            payload = calculate_aod_breakdown(
+                data["decklist"],
+                data["decklist_type"],
+            )
+        else:
+            payload = {
+                "aod_count": calculate_aod_count(
+                    data["decklist"],
+                    data["decklist_type"],
+                )
+            }
 
         return (
             jsonify(
@@ -103,7 +117,7 @@ def aod_count():
                     "status": "success",
                     "message": "aod count calculated successfully",
                     "data": {
-                        "aod_count": aod_count_value,
+                        **payload,
                         "createdAt": datetime.datetime.now().isoformat(),
                     },
                 }

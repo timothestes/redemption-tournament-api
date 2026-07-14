@@ -257,6 +257,25 @@ class Decklist:
                    in the top 9 cards.
                    Returns 0.0 if the deck has fewer than 9 cards.
         """
+        return self.calculate_aod_breakdown()["aod_count"]
+
+    def calculate_aod_breakdown(self) -> dict:
+        """
+        Run one Monte Carlo simulation of the top of the deck and return the
+        full AoD breakdown.
+
+        A draw "triggers" when a Daniel reference (Lost Soul or not) appears in
+        the top 3 cards. Lost Souls keep the chain going but never add to the
+        AoD count itself.
+
+        Returns:
+            dict with keys:
+                aod_count: avg non-Lost Soul Daniel references in the top 9.
+                soul_aod_count: avg Daniel Lost Soul references in the top 9.
+                whiff_percentage: percent of draws with no Daniel reference in
+                    the top 3 (the chain never triggers).
+            All values are 0.0 when the deck has fewer than 9 cards.
+        """
         # Build a list of all cards in the main deck with their references
         # Exclude "The Ancient of Days" card itself from the simulation
         all_cards = []
@@ -271,13 +290,14 @@ class Decklist:
             for _ in range(quantity):
                 all_cards.append((reference, is_lost_soul))
 
-        # If we have fewer than 9 cards, return 0
+        # If we have fewer than 9 cards, everything is 0
         if len(all_cards) < 9:
-            return 0.0
+            return {"aod_count": 0.0, "soul_aod_count": 0.0, "whiff_percentage": 0.0}
 
-        # Monte Carlo simulation to calculate average Daniel reference cards in top 9
         num_simulations = 10_000
-        total_daniel_cards = 0
+        non_soul_total = 0
+        soul_total = 0
+        whiffs = 0
 
         for _ in range(num_simulations):
             # Shuffle the deck
@@ -286,21 +306,25 @@ class Decklist:
             # Check first 3 cards for any Daniel references
             # (Lost Souls count here — they keep the chain going)
             first_3 = shuffled_deck[0:3]
-            first_3_daniel = sum(1 for ref, _ in first_3 if ref and "Daniel" in ref)
+            triggered = any(ref and "Daniel" in ref for ref, _ in first_3)
 
-            # If no Daniel cards in first 3, AoD count is 0 for this simulation
-            if first_3_daniel == 0:
-                daniel_count = 0
-            else:
-                # If at least 1 Daniel in first 3, count non-Lost Soul Daniel
-                # cards in top 9
-                top_9_cards = shuffled_deck[0:9]
-                daniel_count = sum(
-                    1
-                    for ref, is_lost_soul in top_9_cards
-                    if ref and "Daniel" in ref and not is_lost_soul
-                )
+            # If no Daniel cards in first 3, the chain never fires (a whiff)
+            if not triggered:
+                whiffs += 1
+                continue
 
-            total_daniel_cards += daniel_count
+            # Chain triggered — tally the Daniel references in the top 9,
+            # keeping souls and non-souls separate
+            top_9_cards = shuffled_deck[0:9]
+            for ref, is_lost_soul in top_9_cards:
+                if ref and "Daniel" in ref:
+                    if is_lost_soul:
+                        soul_total += 1
+                    else:
+                        non_soul_total += 1
 
-        return round(total_daniel_cards / num_simulations, 2)
+        return {
+            "aod_count": round(non_soul_total / num_simulations, 2),
+            "soul_aod_count": round(soul_total / num_simulations, 2),
+            "whiff_percentage": round(whiffs / num_simulations * 100, 2),
+        }
