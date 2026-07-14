@@ -102,24 +102,26 @@ def test_ancient_of_days_itself_is_excluded():
 
 # --- calculate_aod_breakdown ------------------------------------------------
 # Returns {"aod_count", "soul_aod_count", "whiff_percentage"} from one
-# simulation. aod_count is the non-Lost Soul Daniel count (the default number),
-# soul_aod_count is the Daniel Lost Soul count, and whiff_percentage is the
-# share of draws with no Daniel reference in the top 3 (chain never triggers).
+# simulation. Both AoD figures are the same top-9 Daniel count: aod_count
+# EXCLUDES Lost Souls (the default number), soul_aod_count INCLUDES them
+# (so it is always >= aod_count). whiff_percentage is the share of draws with
+# no Daniel reference in the top 3 (chain never triggers).
 
 
 def test_breakdown_all_daniel_heroes():
+    # No souls, so counting-with-souls equals the plain count.
     decklist = make_decklist(
         {"Daniel Hero": card(reference="Daniel 1:8", type="Hero", quantity=9)}
     )
     result = decklist.calculate_aod_breakdown()
     assert result["aod_count"] == 9.0
-    assert result["soul_aod_count"] == 0.0
+    assert result["soul_aod_count"] == 9.0
     assert result["whiff_percentage"] == 0.0
 
 
-def test_breakdown_all_daniel_souls_score_only_as_souls():
-    # A Daniel Lost Soul in the top 3 still triggers (whiff 0), but the souls
-    # land in soul_aod_count, never in the non-soul aod_count.
+def test_breakdown_all_daniel_souls_only_count_with_souls():
+    # A Daniel Lost Soul in the top 3 still triggers (whiff 0). The souls never
+    # add to aod_count but do add to soul_aod_count.
     decklist = make_decklist(
         {
             "Lost Soul [Daniel 3:6]": card(
@@ -134,6 +136,8 @@ def test_breakdown_all_daniel_souls_score_only_as_souls():
 
 
 def test_breakdown_mixed_souls_and_heroes():
+    # 5 Daniel heroes + 4 Daniel souls: aod_count is the 5 heroes,
+    # soul_aod_count is all 9 (heroes + souls).
     decklist = make_decklist(
         {
             "Lost Soul [Daniel 3:6]": card(
@@ -144,7 +148,7 @@ def test_breakdown_mixed_souls_and_heroes():
     )
     result = decklist.calculate_aod_breakdown()
     assert result["aod_count"] == 5.0
-    assert result["soul_aod_count"] == 4.0
+    assert result["soul_aod_count"] == 9.0
     assert result["whiff_percentage"] == 0.0
 
 
