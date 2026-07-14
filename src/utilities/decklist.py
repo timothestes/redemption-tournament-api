@@ -265,13 +265,15 @@ class Decklist:
         full AoD breakdown.
 
         A draw "triggers" when a Daniel reference (Lost Soul or not) appears in
-        the top 3 cards. Lost Souls keep the chain going but never add to the
-        AoD count itself.
+        the top 3 cards. The two AoD figures are the same top-9 count computed
+        two ways — one that ignores Daniel Lost Souls and one that counts them.
 
         Returns:
             dict with keys:
-                aod_count: avg non-Lost Soul Daniel references in the top 9.
-                soul_aod_count: avg Daniel Lost Soul references in the top 9.
+                aod_count: avg Daniel references in the top 9, EXCLUDING Lost
+                    Souls (the default AoD number).
+                soul_aod_count: avg Daniel references in the top 9, INCLUDING
+                    Lost Souls (always >= aod_count).
                 whiff_percentage: percent of draws with no Daniel reference in
                     the top 3 (the chain never triggers).
             All values are 0.0 when the deck has fewer than 9 cards.
@@ -325,6 +327,8 @@ class Decklist:
 
         return {
             "aod_count": round(non_soul_total / num_simulations, 2),
-            "soul_aod_count": round(soul_total / num_simulations, 2),
+            "soul_aod_count": round(
+                (non_soul_total + soul_total) / num_simulations, 2
+            ),
             "whiff_percentage": round(whiffs / num_simulations * 100, 2),
         }
