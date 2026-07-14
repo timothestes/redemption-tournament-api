@@ -50,6 +50,24 @@ def calculate_aod_count(deck_data: str, deck_type: str) -> float:
     return decklist_object.calculate_aod_count()
 
 
+def calculate_aod_breakdown(deck_data: str, deck_type: str) -> dict:
+    """
+    Calculate the full AoD breakdown (non-soul count, soul count, whiff %) for
+    a deck without generating any files.
+
+    Args:
+        deck_data: Raw deck data string
+        deck_type: Type of deck being processed
+
+    Returns:
+        dict: {"aod_count", "soul_aod_count", "whiff_percentage"}.
+    """
+    _, _, decklist_object = _process_deck_data(
+        deck_data, deck_type, bypass_assertions=True
+    )
+    return decklist_object.calculate_aod_breakdown()
+
+
 def generate_webp(
     deck_data: str,
     deck_type: str,
