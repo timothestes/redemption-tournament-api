@@ -110,7 +110,7 @@ def place_section(
     line_spacing,
     add_quantity=True,
     color_alignment=False,
-    sort_by: Union[str, List[str]] = "default",
+    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     max_items: int = None,
 ):
     """
@@ -169,7 +169,7 @@ def place_section_by_type(
     y,
     add_quantity=True,
     color_alignment=False,
-    sort_by: Union[str, List[str]] = "default",
+    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     max_items: int = None,
 ):
     """
@@ -319,7 +319,7 @@ def make_pdf(
     name: str = "",
     event: str = "",
     show_alignment: bool = False,
-    sort_by: Union[str, List[str]] = "default",
+    sort_by: Union[str, List[str]] = ["type", "alignment", "brigade", "name"],
     m_count_value: float = None,
     aod_count_value: float = None,
     is_legal: bool = None,
@@ -337,7 +337,8 @@ def make_pdf(
         show_alignment: Whether to show alignment colors and counts
         sort_by: Single field or list of fields to sort by.
                 Available fields: 'alignment', 'brigade', 'type', 'name'.
-                "default" applies the canonical default card sort order.
+                Deck sheets present by type; pass "default" for the
+                canonical default card sort order instead.
         m_count_value: The calculated M count value to display (default: None)
         aod_count_value: The calculated AoD count value to display (default: None)
     """
