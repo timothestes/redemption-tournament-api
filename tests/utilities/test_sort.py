@@ -390,3 +390,17 @@ def test_existing_field_list_path_unchanged():
     }
     assert [n for n, _ in sort_cards(cards, "name")] == ["A Card", "B Card"]
     assert [n for n, _ in sort_cards(cards, ["alignment", "name"])] == ["B Card", "A Card"]
+
+
+def test_pdf_and_webp_default_to_type_sort():
+    # Deck presentations sort by type (players scan decks by card type);
+    # "default" stays available as an opt-in. Guard the signature defaults so
+    # a future change can't silently flip deck sheets back.
+    import inspect
+
+    from src.utilities.text_to_pdf import make_pdf
+    from src.utilities.text_to_webp import make_webp
+
+    classic = ["type", "alignment", "brigade", "name"]
+    assert inspect.signature(make_pdf).parameters["sort_by"].default == classic
+    assert inspect.signature(make_webp).parameters["sort_by"].default == classic
