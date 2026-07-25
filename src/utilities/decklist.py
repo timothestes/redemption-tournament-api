@@ -54,9 +54,9 @@ class Decklist:
             raise AssertionError(
                 "Please load a deck that contains 10 or less cards in the reserve for type 1"
             )
-        elif self.reserve_size > 15 and deck_type == "type_2":
+        elif self.reserve_size > 20 and deck_type == "type_2":
             raise AssertionError(
-                "Please load a deck that contains 15 or less cards in the reserve for type 2"
+                "Please load a deck that contains 20 or less cards in the reserve for type 2"
             )
 
     def _get_size_of(self, card_list: dict) -> int:

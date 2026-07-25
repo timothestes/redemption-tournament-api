@@ -57,6 +57,13 @@ T2_SECTION_LIMITS = {
     "Misc": 10,
 }
 
+# The T2 template's Reserve box has room for exactly 15 printed lines before
+# hitting the physical bottom edge of the page (line_spacing=16 from the
+# Reserve y-position leaves zero margin at the 16th line; the 17th+ would
+# draw off the page entirely). T2's reserve cap is 20, so anything past 15
+# must go to the overflow page, same as the main-deck sections.
+T2_RESERVE_LINE_LIMIT = 15
+
 
 def clean_card_name(card_name, card_data):
     """
@@ -158,6 +165,29 @@ def place_section(
             c.setFillColorRGB(0, 0, 0)
 
     return overflow_items
+
+
+def split_reserve_by_line_count(reserve, sort_by, max_lines):
+    """
+    Split a reserve dict into what fits within max_lines printed lines and
+    the remainder, for sections rendered with add_quantity=False (one line
+    per copy, not per unique card). Each unique card entry is kept whole —
+    if adding a card's full quantity would exceed max_lines, that entire
+    entry (and everything after it) goes to overflow rather than splitting
+    its copies across the boundary.
+    """
+    sorted_items = sort_cards(reserve, sort_by)
+    visible = {}
+    overflow = {}
+    lines_used = 0
+    for card_name, card_data in sorted_items:
+        quantity = card_data.get("quantity", 1)
+        if not overflow and lines_used + quantity <= max_lines:
+            visible[card_name] = card_data
+            lines_used += quantity
+        else:
+            overflow[card_name] = card_data
+    return visible, overflow
 
 
 def place_section_by_type(
@@ -427,7 +457,11 @@ def make_pdf(
         }
 
     # Draw card listings with color_alignment option.
-    # Enforce per-section limits on main deck only; reserve has no limit.
+    # Enforce per-section limits on the main deck. Reserve has no printed
+    # limit for type_1/paragon (10 always fits the template box), but T2's
+    # reserve cap of 20 exceeds what the template's Reserve box can print
+    # (see T2_RESERVE_LINE_LIMIT), so its overflow routes to the same
+    # OVERFLOW page as the main-deck sections.
     limits = T1_SECTION_LIMITS if deck_type in ("type_1", "paragon") else T2_SECTION_LIMITS
     overflow_sections = []
 
@@ -457,9 +491,17 @@ def make_pdf(
     _draw_section("Fortress", ["Fortress", "Site", "City"], "Fortress")
     _draw_section("Misc", "misc", "Misc")
 
+    reserve_to_draw = reserve
+    if deck_type == "type_2":
+        reserve_to_draw, reserve_overflow = split_reserve_by_line_count(
+            reserve, sort_by, T2_RESERVE_LINE_LIMIT
+        )
+        if reserve_overflow:
+            overflow_sections.append(("Reserve", reserve_overflow))
+
     place_section_by_type(
         c,
-        reserve,
+        reserve_to_draw,
         height_points,
         card_types="all",
         x=section_mappings["lists"]["Reserve"]["x"],
