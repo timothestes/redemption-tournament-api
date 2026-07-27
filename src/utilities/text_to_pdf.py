@@ -33,36 +33,46 @@ NON_MISC_TYPES = [
     "City",
 ]
 
+T1_TEMPLATE = "assets/pdfs/t1_deck_check_v2.pdf"
+T2_TEMPLATE = "assets/pdfs/t2_deck_check_v2.pdf"
+
+# The T1 template's Reserve box has exactly this many numbered lines, which
+# matches T1's reserve cap of 10.
+T1_RESERVE_LINE_LIMIT = 10
+
+# Section limits are the number of ruled writing lines each section actually
+# has on the v2 templates. The v2 sheets keep the same total line count as v1
+# but redistribute it: Dominants and Lost Souls were heavily over-allocated
+# (21 lines each on T1) while Heroes/Evil Characters and the Enhancement
+# sections were starved, which is what forced most overflow pages.
 T1_SECTION_LIMITS = {
-    "Dominant": 21,
-    "Hero": 20,
-    "GE": 13,
-    "Lost Soul": 21,
-    "Evil Character": 20,
-    "EE": 13,
+    "Dominant": 9,
+    "Hero": 24,
+    "GE": 21,
+    "Lost Soul": 9,
+    "Evil Character": 24,
+    "EE": 21,
     "Artifact": 16,  # Combined: Artifact, Covenant, Curse
     "Fortress": 13,  # Combined: Fortress, Site, City
     "Misc": 10,
 }
 
 T2_SECTION_LIMITS = {
-    "Dominant": 23,
-    "Hero": 20,
-    "GE": 11,
-    "Lost Soul": 23,
-    "Evil Character": 20,
-    "EE": 11,
-    "Artifact": 16,  # Combined: Artifact, Covenant, Curse
+    "Dominant": 19,
+    "Hero": 21,
+    "GE": 13,
+    "Lost Soul": 19,
+    "Evil Character": 21,
+    "EE": 13,
+    "Artifact": 13,  # Combined: Artifact, Covenant, Curse
     "Fortress": 11,  # Combined: Fortress, Site, City
-    "Misc": 10,
+    "Misc": 6,
 }
 
-# The T2 template's Reserve box has room for exactly 15 printed lines before
-# hitting the physical bottom edge of the page (line_spacing=16 from the
-# Reserve y-position leaves zero margin at the 16th line; the 17th+ would
-# draw off the page entirely). T2's reserve cap is 20, so anything past 15
-# must go to the overflow page, same as the main-deck sections.
-T2_RESERVE_LINE_LIMIT = 15
+# The v2 T2 template's Reserve box has exactly 20 numbered lines, matching
+# T2's reserve cap of 20, so a legal reserve always fits on the sheet. The
+# split is kept as a guard only — it no longer routes anything to overflow.
+T2_RESERVE_LINE_LIMIT = 20
 
 
 def clean_card_name(card_name, card_data):
@@ -377,9 +387,9 @@ def make_pdf(
     else:
         color_alignment = False
     if deck_type in ("type_1", "paragon"):
-        template_path = "assets/pdfs/t1_deck_check.pdf"
+        template_path = T1_TEMPLATE
     elif deck_type == "type_2":
-        template_path = "assets/pdfs/t2_deck_check.pdf"
+        template_path = T2_TEMPLATE
 
     # Create output directory if it doesn't exist
     if str_to_bool(os.getenv("DEBUG")):
@@ -402,14 +412,17 @@ def make_pdf(
     reserve = deck_data.get("reserve", {})
 
     if deck_type in ("type_1", "paragon"):
+        # On the v2 T1 sheet the Dominant/Lost Soul rows and the whole third
+        # column sit exactly where they did on v1, so only the Hero, Evil
+        # Character and Enhancement blocks move up.
         section_mappings = {
             "lists": {
                 "Dominant": {"x": 57, "y": 180},
-                "Hero": {"x": 57, "y": 548},
-                "GE": {"x": 57, "y": 895},
+                "Hero": {"x": 57, "y": 350},
+                "GE": {"x": 57, "y": 766},
                 "Lost Soul": {"x": 310, "y": 180},
-                "Evil Character": {"x": 310, "y": 548},
-                "EE": {"x": 310, "y": 895},
+                "Evil Character": {"x": 310, "y": 349},
+                "EE": {"x": 310, "y": 766},
                 "Artifact": {"x": 560, "y": 181},
                 "Fortress": {"x": 560, "y": 474},
                 "Misc": {"x": 560, "y": 700},
@@ -417,11 +430,11 @@ def make_pdf(
             },
             "numbers": {
                 "Dominant": {"x": 124, "y": 153},
-                "Hero": {"x": 97, "y": 532},
-                "GE": {"x": 189, "y": 877},
+                "Hero": {"x": 97, "y": 335},
+                "GE": {"x": 189, "y": 748},
                 "Lost Soul": {"x": 381, "y": 154},
-                "Evil Character": {"x": 408, "y": 532},
-                "EE": {"x": 439, "y": 877},
+                "Evil Character": {"x": 408, "y": 335},
+                "EE": {"x": 439, "y": 748},
                 "Artifact": {"x": 741, "y": 153},
                 "Fortress": {"x": 710, "y": 454},
                 "Misc": {"x": 596, "y": 687},
@@ -429,32 +442,39 @@ def make_pdf(
             },
         }
     elif deck_type == "type_2":
-        section_mappings = section_mappings = {
+        # The whole v2 T2 sheet is inset 5pt further right than v1, and every
+        # row moved, so both x and y differ from the v1 mapping throughout.
+        section_mappings = {
             "lists": {
-                "Dominant": {"x": 57, "y": 178},
-                "Hero": {"x": 57, "y": 575},
-                "GE": {"x": 57, "y": 920},
-                "Lost Soul": {"x": 310, "y": 178},
-                "Evil Character": {"x": 310, "y": 572},
-                "EE": {"x": 310, "y": 920},
-                "Artifact": {"x": 560, "y": 178},
-                "Fortress": {"x": 560, "y": 474},
-                "Misc": {"x": 560, "y": 668},
-                "Reserve": {"x": 580, "y": 858},
+                "Dominant": {"x": 62, "y": 186},
+                "Hero": {"x": 62, "y": 519},
+                "GE": {"x": 62, "y": 885},
+                "Lost Soul": {"x": 315, "y": 186},
+                "Evil Character": {"x": 315, "y": 520},
+                "EE": {"x": 315, "y": 885},
+                "Artifact": {"x": 565, "y": 186},
+                "Fortress": {"x": 565, "y": 432},
+                "Misc": {"x": 565, "y": 629},
+                "Reserve": {"x": 585, "y": 753},
             },
             "numbers": {
-                "Dominant": {"x": 124, "y": 150},
-                "Hero": {"x": 96, "y": 557},
-                "GE": {"x": 188, "y": 901},
-                "Lost Soul": {"x": 380, "y": 150},
-                "Evil Character": {"x": 408, "y": 556},
-                "EE": {"x": 435, "y": 902},
-                "Artifact": {"x": 744, "y": 151},
-                "Fortress": {"x": 710, "y": 451},
-                "Misc": {"x": 596, "y": 655},
-                "Reserve": {"x": 612, "y": 836},
+                "Dominant": {"x": 129, "y": 158},
+                "Hero": {"x": 101, "y": 501},
+                "GE": {"x": 193, "y": 873},
+                "Lost Soul": {"x": 385, "y": 158},
+                "Evil Character": {"x": 413, "y": 500},
+                "EE": {"x": 440, "y": 874},
+                "Artifact": {"x": 749, "y": 159},
+                "Fortress": {"x": 715, "y": 411},
+                "Misc": {"x": 601, "y": 615},
+                "Reserve": {"x": 617, "y": 731},
             },
         }
+
+    # The v2 T2 sheet places its entire top header block (Name, Event, Total
+    # Cards) 5pt right and 5pt lower than the v2 T1 sheet. The fill-in offsets
+    # below are measured against T1, so T2 gets nudged to match.
+    header_dx, header_dy = (5, 5) if deck_type == "type_2" else (0, 0)
 
     # Draw card listings with color_alignment option.
     # Enforce per-section limits on the main deck. Reserve has no printed
@@ -601,8 +621,8 @@ def make_pdf(
     total_main = sum(int(card.get("quantity", 1)) for card in main_deck.values())
     c.setFont("Helvetica-Bold", 18)
     c.drawString(
-        width_points - right_margin - box_width + 5,
-        height_points - top_margin - box_height + 10,
+        width_points - right_margin - box_width + 5 + header_dx,
+        height_points - top_margin - box_height + 10 - header_dy,
         f"{total_main}",
     )
 
@@ -615,8 +635,8 @@ def make_pdf(
         c.setFont("Helvetica", 12)
         c.setFillColorRGB(0, 0, 0)
         c.drawString(
-            width_points - right_margin - box_width + 5,
-            height_points - top_margin - box_height + 10,
+            width_points - right_margin - box_width + 5 + header_dx,
+            height_points - top_margin - box_height + 10 - header_dy,
             f"M Count: {m_count_value}",
         )
 
@@ -629,8 +649,8 @@ def make_pdf(
         c.setFont("Helvetica", 12)
         c.setFillColorRGB(0, 0, 0)
         c.drawString(
-            width_points - right_margin - box_width + 5,
-            height_points - top_margin - box_height + 10,
+            width_points - right_margin - box_width + 5 + header_dx,
+            height_points - top_margin - box_height + 10 - header_dy,
             f"AoD Count: {aod_count_value}",
         )
 
@@ -648,8 +668,8 @@ def make_pdf(
         c.setFont("Helvetica", 10)
         c.setFillColorRGB(0, 0.5, 0)  # Green
         c.drawString(
-            width_points - right_margin - box_width + 5,
-            height_points - top_margin - box_height + 10,
+            width_points - right_margin - box_width + 5 + header_dx,
+            height_points - top_margin - box_height + 10 - header_dy,
             f"Good Count: {total_good}",
         )
 
@@ -665,8 +685,8 @@ def make_pdf(
         c.setFont("Helvetica", 10)
         c.setFillColorRGB(0.8, 0, 0)  # Red
         c.drawString(
-            width_points - right_margin - box_width + 5,
-            height_points - top_margin - box_height + 10,
+            width_points - right_margin - box_width + 5 + header_dx,
+            height_points - top_margin - box_height + 10 - header_dy,
             f"Evil Count: {total_evil}",
         )
 
@@ -682,8 +702,8 @@ def make_pdf(
         c.setFont("Helvetica", 10)
         c.setFillColorRGB(0.3, 0.3, 0.3)  # Darker Gray (changed from 0.5, 0.5, 0.5)
         c.drawString(
-            width_points - right_margin - box_width + 5,
-            height_points - top_margin - box_height + 10,
+            width_points - right_margin - box_width + 5 + header_dx,
+            height_points - top_margin - box_height + 10 - header_dy,
             f"Neutral Count: {total_neutral}",
         )
 
@@ -697,8 +717,8 @@ def make_pdf(
     top_margin = 16
     c.setFont("Times-Roman", 24)
     c.drawString(
-        width_points - right_margin - box_width + 5,
-        height_points - top_margin - box_height + 10,
+        width_points - right_margin - box_width + 5 + header_dx,
+        height_points - top_margin - box_height + 10 - header_dy,
         name,
     )
 
@@ -709,8 +729,8 @@ def make_pdf(
     top_margin = 56
     c.setFont("Times-Roman", 20)  # Changed from Times-Bold to Times-Roman
     c.drawString(
-        width_points - right_margin - box_width + 5,
-        height_points - top_margin - box_height + 10,
+        width_points - right_margin - box_width + 5 + header_dx,
+        height_points - top_margin - box_height + 10 - header_dy,
         event,
     )
 
@@ -726,8 +746,8 @@ def make_pdf(
         seal_size = 65
         c.drawImage(
             seal_temp_path,
-            (width_points - seal_size) / 2 - 40,
-            height_points - seal_size - 10,
+            (width_points - seal_size) / 2 - 40 + header_dx,
+            height_points - seal_size - 10 - header_dy,
             width=seal_size,
             height=seal_size,
             mask="auto",
