@@ -29,9 +29,9 @@ class Decklist:
 
         if bypass_assertions:
             # still keep some assertions
-            if self.deck_size > 252:
+            if self.deck_size > 140:
                 raise AssertionError(
-                    "Please load a deck that contains 252 or less cards in the main deck."
+                    "Please load a deck that contains 140 or less cards in the main deck."
                 )
             if self.reserve_size > 20:
                 raise AssertionError(
@@ -42,13 +42,13 @@ class Decklist:
             raise AssertionError(
                 "Please load a deck that contains at least 40 cards in the main deck."
             )
-        if self.deck_size > 252 and deck_type == "type_2":
+        if self.deck_size > 140 and deck_type == "type_2":
             raise AssertionError(
-                "Please load a deck that contains 252 or less cards in the main deck for type 2"
+                "Please load a deck that contains 140 or less cards in the main deck for type 2"
             )
-        elif self.deck_size > 154 and deck_type in ("type_1", "paragon"):
+        elif self.deck_size > 70 and deck_type in ("type_1", "paragon"):
             raise AssertionError(
-                "Please load a deck that contains 154 or less cards in the main deck for type 1"
+                "Please load a deck that contains 70 or less cards in the main deck for type 1"
             )
         if self.reserve_size > 10 and deck_type in ("type_1", "paragon"):
             raise AssertionError(
